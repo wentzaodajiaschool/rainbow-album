@@ -208,7 +208,7 @@
     <div id="loading-animation" class="loading"></div>
 
     <!-- 展示區 -->
-    <div class="container my-5">
+    <div class="container my-1">
         <div id="img-container" class="row g-4 justify-content-start text-center"></div>
     </div>
 
@@ -252,15 +252,28 @@
             fetch('https://script.google.com/macros/s/AKfycbx7gmCRh3kx_1X4n4ffNmj0TXZ0AhwKwIWhDp9ge6yojGKfogArrBxgUmKD01xR5iLV1A/exec')
                 .then(response => response.json())
                 .then(data => {
+                    data.folders.sort((a, b) => {
+                        let dateA = extractDate(a.folderName);
+                        let dateB = extractDate(b.folderName);
+                        return dateB - dateA;
+                    });
+
                     data.folders.forEach(folder => {
                         images.push(folder.folderName)
                         folder.photos.forEach(photoUrl => {
                             images.push(photoUrl);
                         });
                     });
-                    loadMoreImages(); // 初次加載圖片
+
+                    loadMoreImages();
                     hideLoadingAnimation();
                 });
+        }
+
+        function extractDate(folderName) {
+            let parts = folderName.split('-');
+            let dateString = parts[parts.length - 1];
+            return new Date(dateString);
         }
 
         fetchImages();
@@ -274,7 +287,7 @@
         let index = 0; // 計數器
         function loadMoreImages() {
             console.log('執行載入');
-            for (let i = 0; i < 13; i++) { // 一次載入6張
+            for (let i = 0; i < 14; i++) { // 一次載入6張
                 if (index >= images.length) {
                     break;
                 }
@@ -287,7 +300,13 @@
                     img_container.innerHTML += img_col;
                 }
                 else {
-                    let title_col = `<h1 style="text-align: justify"><b>${images[index]}</b></h1>`;
+                    let parts = images[index].split('-');
+                    let dateString = parts[parts.length - 1];
+                    let titleString = parts[0];
+                    let title_col = `<h1 class="mt-5" style="text-align: justify">
+                                        <b>${titleString}</b>
+                                        <span style="color:#92b7df">${dateString}</span>
+                                    </h1>`;
                     img_container.innerHTML += title_col;
                 }
 
@@ -347,10 +366,20 @@
         // 下載按鈕功能
         document.getElementById('download-button').addEventListener('click', function () {
             let imageSrc = document.getElementById('modal-image').src;
+
+            // 創建一個新的<a>元素
             let link = document.createElement('a');
-            link.href = imageSrc;
-            link.download = 'downloaded-image.jpg';
+            link.href = imageSrc; // 圖片的URL
+            link.download = 'downloaded-image.jpg'; // 下載的文件名
+
+            // 這一步很重要：將連結添加到文檔中
+            document.body.appendChild(link);
+
+            // 模擬點擊
             link.click();
+
+            // 從文檔中移除連結
+            document.body.removeChild(link);
         });
 
         // 分享按鈕功能（根據實際情況進行定義）
