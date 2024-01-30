@@ -1,0 +1,95 @@
+html, body {
+    height: 100%;
+    width: 100%;
+  }
+  
+  #about{
+      color: white;
+      width: 100%;
+      background-image: url('https://media.giphy.com/media/TZf4ZyXb0lXXi/giphy.gif');
+      background-size: 100% 100%;
+  /*   min-height: 500px; */
+  
+  
+  }
+  
+  #about_img{
+      border-radius: 50%;
+      width: 180px;
+      height: 180px;
+      object-fit: cover;
+      border-style: solid;
+      border-width: 5px;
+      border-color: white;
+      margin-top: 5%;
+      margin-bottom: 2%;
+  }
+  
+  .card-img-top{
+      width: 100%;
+      height: 25vw;
+      object-fit:cover
+  }
+  /* 小螢幕最大到700px，700以下執行 */
+  @media (max-width: 700px){
+      .card-img-top{
+          width: 100%;
+          height: auto;
+          object-fit:cover
+      }
+  
+      .art-img{
+          width: 100%;
+          height:auto;
+          border-radius: 5%;
+      }
+  }
+  
+  /* 大螢幕最小到700px，700以上執行 */
+  @media (min-width:700px){
+      .art-img{
+          width:90%;
+          height: auto;
+          border-radius: 5%;
+          /* 	動畫效果 */
+          transition: all 0.3s;
+          cursor:pointer;
+          position: relative;
+          z-index:0; /* z軸深度 */
+      }
+      /* 	滑鼠碰到 */
+      .art-img:hover{
+          z-index: 1; /* z軸深度 */
+      }
+      /* 	滑鼠按下 */
+      .art-img:active{
+          transform: skew(0deg);
+          z-index: 1; /* z軸深度 */
+          /* 用推擠到固定位置 */
+          position: fixed;
+          top: -100%;
+          right: -100%;
+          left: -100%;
+          bottom:-100%;
+          margin: auto;
+          /* 設定大小 */
+          max-height: 80%;
+          width: auto;
+      }
+      .img-section:active{
+          z-index: 1; /* z軸深度 */
+          /* 用推擠到固定位置 */
+          position: fixed;
+          top: -100%;
+          right: -100%;
+          left: -100%;
+          bottom:-100%;
+          margin: auto;
+          /* 設定大小 */
+          max-height: 100%;
+          width: auto;
+          /* 顏色  */
+          background:rgba(0, 0, 0, 0.5);
+          transition: background 0.5s;
+      }
+  }

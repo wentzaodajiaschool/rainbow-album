@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>照片展示</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-F3w7mX95PdgyTmZZMECAngseQB83DfGTowi0iMjiWaeVhAn4FJkqJByhZMI3AhiU" crossorigin="anonymous">
+    <style>
+        html,
+        body {
+            height: 100%;
+            width: 100%;
+        }
+
+        .loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 20px;
+            color: #007bff;
+            display: none;
+            /* 預設不顯示 */
+        }
+
+
+        .card-img-top,
+        .art-img {
+            width: 100%;
+            object-fit: cover;
+        }
+
+        /* 小螢幕最大到 700px，700 以下執行 */
+        @media (max-width: 700px) {
+            .card-img-top {
+                height: auto;
+            }
+
+            .art-img {
+                height: auto;
+                border-radius: 5%;
+            }
+        }
+
+        /* 大螢幕最小到 700px，700 以上執行 */
+        @media (min-width: 700px) {
+            .card-img-top {
+                height: 25vw;
+            }
+
+            .art-img {
+                height: auto;
+                border-radius: 5%;
+                transition: all 0.3s;
+                cursor: pointer;
+                position: relative;
+                z-index: 0;
+            }
+
+            .art-img:hover {
+                z-index: 1;
+            }
+        }
+
+        /* 模態框的樣式 */
+        #imageModal .modal-dialog {
+            margin: 1.75rem auto;
+            margin-top: 5vh;
+            /* 向上偏移 */
+        }
+
+        #imageModal .modal-content {
+            background-color: transparent;
+            border: none;
+        }
+
+        #imageModal .modal-body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 80vh;
+        }
+
+        #modal-image {
+            max-height: 70vh;
+            /* 稍微降低圖片的最大高度以適應按鈕 */
+            max-width: 80vw;
+            width: auto;
+            height: auto;
+        }
+
+        #imageModal .modal-footer {
+            display: flex;
+            /* 使用 flexbox 進行布局 */
+            justify-content: center;
+            /* 水平居中排列元素 */
+            align-items: center;
+            /* 垂直居中 */
+            position: relative;
+            /* 相對定位 */
+            width: 100%;
+            /* 適應 modal-body 的寬度 */
+            background: transparent;
+            border-top: none;
+            padding-top: 10px;
+            /* 圖片與按鈕之間的間距 */
+        }
+
+        #imageModal .modal-footer button {
+            color: #007bff;
+            /* 按鈕文字顏色 */
+            background-color: #f8f9fa;
+            /* 淺灰色背景 */
+            border: none;
+            /* 移除邊框 */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            /* 添加陰影 */
+            text-decoration: none;
+            /* 移除文字下的底線 */
+            margin: 0 5px;
+            /* 為按鈕添加左右間距 */
+            padding: 5px 10px;
+            /* 內部留白 */
+        }
+
+        #imageModal .modal-footer button:last-child {
+            margin-right: 0;
+            /* 最後一個按鈕不需要右側間距 */
+        }
+
+        .img-section {
+            opacity: 0;
+            /* 初始透明度設為 0 */
+            transform: translateY(20px);
+            /* 初始時向下移動一點 */
+            transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+        }
+
+        .img-section.loaded {
+            opacity: 1;
+            /* 完全不透明 */
+            transform: translateY(0);
+            /* 恢復到原始位置 */
+        }
+
+        .loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            display: none;
+            /* 預設不顯示 */
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: translate(-50%, -50%) rotate(0deg);
+            }
+
+            100% {
+                transform: translate(-50%, -50%) rotate(360deg);
+            }
+        }
+
+        .photo-end-message {
+            text-align: center;
+            padding: 20px;
+            font-size: 16px;
+            color: #666;
+            display: none;
+            /* 初始狀態不顯示 */
+            animation: bounce 1s ease;
+        }
+
+        @keyframes bounce {
+
+            0%,
+            20%,
+            50%,
+            80%,
+            100% {
+                transform: translateY(0);
+            }
+
+            40% {
+                transform: translateY(-30px);
+            }
+
+            60% {
+                transform: translateY(-15px);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="loading-animation" class="loading"></div>
+
+    <!-- 展示區 -->
+    <div class="container my-5">
+        <div id="img-container" class="row g-4 justify-content-start text-center"></div>
+    </div>
+
+    <!-- 模態框 -->
+    <div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <img id="modal-image" src="" class="img-fluid">
+                </div>
+                <div class="modal-footer">
+                    <button id="download-button" class="btn btn-link">
+                        <i class="fas fa-download"></i> 下載
+                    </button>
+                    <button id="share-button" class="btn btn-link">
+                        <i class="fas fa-share-alt"></i> 分享
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="photo-list-end" class="photo-end-message">
+        沒有更多照片了
+    </div>
+
+    <script>
+        let images = []; // 初始化陣列
+
+        // AJAX請求從伺服器獲取圖片URL
+
+        function showLoadingAnimation() {
+            document.getElementById('loading-animation').style.display = 'block';
+        }
+
+        function hideLoadingAnimation() {
+            document.getElementById('loading-animation').style.display = 'none';
+        }
+        function fetchImages() {
+            showLoadingAnimation();
+            fetch('https://script.google.com/macros/s/AKfycbx7gmCRh3kx_1X4n4ffNmj0TXZ0AhwKwIWhDp9ge6yojGKfogArrBxgUmKD01xR5iLV1A/exec')
+                .then(response => response.json())
+                .then(data => {
+                    data.folders.forEach(folder => {
+                        images.push(folder.folderName)
+                        folder.photos.forEach(photoUrl => {
+                            images.push(photoUrl);
+                        });
+                    });
+                    loadMoreImages(); // 初次加載圖片
+                    hideLoadingAnimation();
+                });
+        }
+
+        fetchImages();
+
+        function isScrollBottom() {
+            let screen_move = window.innerHeight + window.scrollY;
+            let doc_height = document.body.offsetHeight;
+            return screen_move >= doc_height;
+        }
+
+        let index = 0; // 計數器
+        function loadMoreImages() {
+            console.log('執行載入');
+            for (let i = 0; i < 13; i++) { // 一次載入6張
+                if (index >= images.length) {
+                    break;
+                }
+                let img_container = document.getElementById('img-container');
+                if (images[index].includes('https://')) {
+                    let img_col = `
+                    <div class="col-lg-2 col-6 img-section">
+                        <img class="art-img shadow" src="${images[index]}=s500" alt="">
+                    </div>`;
+                    img_container.innerHTML += img_col;
+                }
+                else {
+                    let title_col = `<h1 style="text-align: justify"><b>${images[index]}</b></h1>`;
+                    img_container.innerHTML += title_col;
+                }
+
+                index++;
+            }
+            let imgSections = document.querySelectorAll('.img-section');
+            imgSections.forEach(section => {
+                // 模擬圖片加載完成
+                setTimeout(() => {
+                    section.classList.add('loaded');
+                }, 300); // 假設圖片在 300 毫秒內加載完成
+            });
+
+            // 假設 images 是所有圖片的陣列
+            if (index >= images.length && images.length != 0) { // 如果已經到達圖片列表的末尾
+                console.log(`${index} ${images.length}已經到達圖片列表的末尾`)
+                showEndOfPhotosMessage();
+            }
+        }
+
+
+        function showEndOfPhotosMessage() {
+            let photoEndMessage = document.getElementById('photo-list-end');
+            photoEndMessage.style.display = 'block'; // 顯示消息
+        }
+
+        // 監聽滾動事件
+        let debounceTimer;
+        window.addEventListener('scroll', function () {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(function () {
+                if (isScrollBottom()) {
+                    console.log(`共${images.length}張，已載入${index}`);
+                    loadMoreImages();
+                }
+            }, 600); // 防抖動
+        });
+
+        // 點擊圖片顯示模態框
+        document.getElementById('img-container').addEventListener('click', function (event) {
+            if (event.target.classList.contains('art-img')) {
+                let modalImage = document.getElementById('modal-image');
+                // 使用replace()方法移除=s220
+                let srcWithoutParameters = event.target.src.replace('=s500', '');
+                modalImage.src = srcWithoutParameters;
+                $('#imageModal').modal('show');
+            }
+        });
+
+        $('#imageModal').on('click', function (event) {
+            // 檢查點擊是否在模態框的內容外
+            if ($(event.target).hasClass('modal') || $(event.target).hasClass('modal-dialog')) {
+                $('#imageModal').modal('hide');
+            }
+        });
+
+        // 下載按鈕功能
+        document.getElementById('download-button').addEventListener('click', function () {
+            let imageSrc = document.getElementById('modal-image').src;
+            let link = document.createElement('a');
+            link.href = imageSrc;
+            link.download = 'downloaded-image.jpg';
+            link.click();
+        });
+
+        // 分享按鈕功能（根據實際情況進行定義）
+        document.getElementById('share-button').addEventListener('click', function () {
+            if (navigator.share) {
+                // Web Share API可用
+                navigator.share({
+                    url: document.getElementById('modal-image').src
+                })
+                    .then(() => console.log('分享成功！'))
+                    .catch((error) => console.log('分享失敗', error));
+            } else {
+                // 處理不支援 Web Share API的情況
+                console.log('您的瀏覽器不支援 Web Share API');
+            }
+        });
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-/bQdsTh/da6pkI1MST/rWKFNjaCP5gBSY4sEBT38Q/9RBh9AH40zEOg7Hlq2THRZ"
+        crossorigin="anonymous"></script>
+</body>
+
+</html>
