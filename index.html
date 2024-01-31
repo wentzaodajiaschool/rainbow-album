@@ -326,7 +326,7 @@
 
                 if (imgSrc.includes('https://')) {
                     let img = document.createElement('img');
-                    img.src = imgSrc;
+                    img.src = `${imgSrc}=s800`;
                     slide.appendChild(img);
 
                     if (imgSrc === clickedImgSrc) {
@@ -387,7 +387,7 @@
                 if (images[index].includes('https://')) {
                     let img_col = `
             <div class="col-lg-2 col-6 img-section">
-                <img class="art-img shadow" src="${images[index]}=s500" alt="">
+                <img class="art-img shadow" src="${images[index]}=s300" alt="">
             </div>`;
                     img_container.innerHTML += img_col;
                 }
@@ -438,7 +438,7 @@
         // 點擊圖片顯示模態框
         document.getElementById('img-container').addEventListener('click', function (event) {
             if (event.target.classList.contains('art-img')) {
-                let clickedImgSrc = event.target.src.replace('=s400', '=s800'); // 獲取原始圖片URL
+                let clickedImgSrc = event.target.src.replace('=s300', ''); // 獲取原始圖片URL
                 initializeSwiper(clickedImgSrc);
                 $('#imageModal').modal('show'); // 顯示模態框
             }
