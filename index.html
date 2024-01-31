@@ -240,6 +240,23 @@
             color: white;
             /* 可根據背景顏色調整 */
         }
+
+        .toast-container {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1050;
+        }
+
+        .toast-custom {
+            background-color: #f0f0f0;
+            /* 淺灰色背景 */
+            color: #333;
+            /* 文本顏色，可根據需要調整 */
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            /* 添加陰影 */
+        }
     </style>
 </head>
 
@@ -283,6 +300,21 @@
     <div id="photo-list-end" class="photo-end-message">
         沒有更多照片了
     </div>
+
+    <!-- Toast 容器 -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+        <!-- Toast -->
+        <div id="scrollToast" class="toast toast-custom align-items-center text-white bg-primary border-0" role="alert"
+            aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+                    aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
@@ -450,9 +482,10 @@
                 clearTimeout(debounceTimer);
                 debounceTimer = setTimeout(function () {
                     if (isScrollBottom()) {
+                        showToast("loading...");
                         loadMoreImages();
                     }
-                }, 600); // 防抖動處理
+                }, 300); // 防抖動處理
             });
 
             // 點擊圖片顯示模態框並初始化 Carousel
@@ -489,6 +522,15 @@
                     $('#carouselExampleControls').carousel('prev');
                 }
             });
+
+            // 顯示 Toast 函數
+            function showToast(message) {
+                let toastContainer = document.querySelector('.toast-container');
+                let toastBody = toastContainer.querySelector('.toast-body');
+                toastBody.textContent = message;
+                let toast = new bootstrap.Toast(toastContainer.querySelector('.toast'), { delay: 500 }); // 顯示 2 秒
+                toast.show();
+            }
 
             // 初始化時執行圖片獲取
             fetchImages();
