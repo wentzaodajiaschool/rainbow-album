@@ -10,9 +10,11 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-F3w7mX95PdgyTmZZMECAngseQB83DfGTowi0iMjiWaeVhAn4FJkqJByhZMI3AhiU" crossorigin="anonymous">
-
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
     <style>
+
         html,
         body {
             height: 100%;
@@ -324,7 +326,7 @@
 
                 if (imgSrc.includes('https://')) {
                     let img = document.createElement('img');
-                    img.src = imgSrc;
+                    // img.src = `${imgSrc}=s800`;
                     slide.appendChild(img);
 
                     if (imgSrc === clickedImgSrc) {
@@ -343,14 +345,14 @@
             // 創建 Swiper 實例
             swiper = new Swiper('.swiper-container', {
                 initialSlide: startIndex, // 設置初始幻燈片
-                loop: true,
-                pagination: {
-                    el: '.swiper-pagination',
-                    type: 'bullets',
-                    clickable: true,
-                    dynamicBullets: true,
-                    dynamicMainBullets: 1
-                },
+                // loop: true,
+                // pagination: {
+                //     el: '.swiper-pagination',
+                //     type: 'bullets',
+                //     clickable: true,
+                //     dynamicBullets: true,
+                //     dynamicMainBullets: 1
+                // },
                 navigation: {
                     nextEl: '.swiper-button-next',
                     prevEl: '.swiper-button-prev',
@@ -385,7 +387,7 @@
                 if (images[index].includes('https://')) {
                     let img_col = `
             <div class="col-lg-2 col-6 img-section">
-                <img class="art-img shadow" src="${images[index]}=s500" alt="">
+                <img class="art-img shadow" src="${images[index]}=s300" alt="">
             </div>`;
                     img_container.innerHTML += img_col;
                 }
@@ -436,7 +438,7 @@
         // 點擊圖片顯示模態框
         document.getElementById('img-container').addEventListener('click', function (event) {
             if (event.target.classList.contains('art-img')) {
-                let clickedImgSrc = event.target.src.replace('=s500', ''); // 獲取原始圖片URL
+                let clickedImgSrc = event.target.src.replace('=s300', ''); // 獲取原始圖片URL
                 initializeSwiper(clickedImgSrc);
                 $('#imageModal').modal('show'); // 顯示模態框
             }
@@ -447,7 +449,6 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-/bQdsTh/da6pkI1MST/rWKFNjaCP5gBSY4sEBT38Q/9RBh9AH40zEOg7Hlq2THRZ"
         crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 </body>
 
 </html>
