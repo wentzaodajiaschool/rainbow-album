@@ -439,7 +439,7 @@
         document.getElementById('img-container').addEventListener('click', function (event) {
             if (event.target.classList.contains('art-img')) {
                 let clickedImgSrc = event.target.src.replace('=s300', ''); // 獲取原始圖片URL
-                initializeSwiper(clickedImgSrc);
+                // initializeSwiper(clickedImgSrc);
                 $('#imageModal').modal('show'); // 顯示模態框
             }
         });
