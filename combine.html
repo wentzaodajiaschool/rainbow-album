@@ -237,7 +237,7 @@
             <div class="modal-content">
                 <div class="modal-body">
                     <!-- Bootstrap Carousel -->
-                    <div id="carouselExampleControls" class="carousel slide">
+                    <div id="carouselExampleControls" class="carousel slide" data-bs-touch="true">
                         <!-- 在這裡添加關閉按鈕 -->
                         <button class="close-btn" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
@@ -270,192 +270,214 @@
     </div>
 
     <script>
-        let images = []; // 初始化圖片URL陣列
-        let swiper;
-        // AJAX請求從伺服器獲取圖片URL
-        function fetchImages() {
-            showLoadingAnimation(); // 顯示加載動畫
-            fetch('https://script.google.com/macros/s/AKfycbx7gmCRh3kx_1X4n4ffNmj0TXZ0AhwKwIWhDp9ge6yojGKfogArrBxgUmKD01xR5iLV1A/exec')
-                .then(response => response.json())
-                .then(data => {
-                    // 對獲取的資料進行排序
-                    data.folders.sort((a, b) => {
-                        let dateA = extractDate(a.folderName);
-                        let dateB = extractDate(b.folderName);
-                        return dateB - dateA;
-                    });
-
-                    // 遍歷資料夾並將圖片URL添加到 images 陣列
-                    data.folders.forEach(folder => {
-                        images.push(folder.folderName);
-                        folder.photos.forEach(photoUrl => {
-                            images.push(photoUrl);
+        document.addEventListener('DOMContentLoaded', function () {
+            let images = []; // 初始化圖片URL陣列
+            // AJAX請求從伺服器獲取圖片URL
+            function fetchImages() {
+                showLoadingAnimation(); // 顯示加載動畫
+                fetch('https://script.google.com/macros/s/AKfycbx7gmCRh3kx_1X4n4ffNmj0TXZ0AhwKwIWhDp9ge6yojGKfogArrBxgUmKD01xR5iLV1A/exec')
+                    .then(response => response.json())
+                    .then(data => {
+                        // 對獲取的資料進行排序
+                        data.folders.sort((a, b) => {
+                            let dateA = extractDate(a.folderName);
+                            let dateB = extractDate(b.folderName);
+                            return dateB - dateA;
                         });
+
+                        // 遍歷資料夾並將圖片URL添加到 images 陣列
+                        data.folders.forEach(folder => {
+                            images.push(folder.folderName);
+                            folder.photos.forEach(photoUrl => {
+                                images.push(photoUrl);
+                            });
+                        });
+
+                        loadMoreImages(); // 加載更多圖片
+                        hideLoadingAnimation(); // 隱藏加載動畫
                     });
-
-                    loadMoreImages(); // 加載更多圖片
-                    hideLoadingAnimation(); // 隱藏加載動畫
-                });
-        }
-
-        // 顯示加載動畫
-        function showLoadingAnimation() {
-            document.getElementById('loading-animation').style.display = 'block';
-        }
-
-        // 隱藏加載動畫
-        function hideLoadingAnimation() {
-            document.getElementById('loading-animation').style.display = 'none';
-        }
-
-        // 從資料夾名稱中提取日期
-        function extractDate(folderName) {
-            let parts = folderName.split('-');
-            let dateString = parts[parts.length - 1];
-            return new Date(dateString);
-        }
-
-        // 初始時執行圖片獲取
-        fetchImages();
-
-        // 判斷是否滾動到頁面底部
-        function isScrollBottom() {
-            let screen_move = window.innerHeight + window.scrollY;
-            let doc_height = document.body.offsetHeight;
-            return screen_move >= doc_height;
-        }
-
-        $('#imageModal').on('hidden.bs.modal', function () {
-            if (swiper) {
-                swiper.destroy();
-                swiper = null;
             }
-        });
 
-        // 初始化 Carousel 的函數
-        function initializeCarousel(clickedImgSrc) {
-            var carouselInner = document.querySelector('.carousel-inner');
-            carouselInner.innerHTML = ''; // 清空之前的圖片
+            // 顯示加載動畫
+            function showLoadingAnimation() {
+                document.getElementById('loading-animation').style.display = 'block';
+            }
 
-            images.forEach((imgSrc, index) => {
-                let carouselItem = document.createElement('div');
-                carouselItem.className = 'carousel-item';
-                if (imgSrc + '=s300' === clickedImgSrc) {
-                    carouselItem.classList.add('active'); // 為點擊的圖片添加 active 類
+            // 隱藏加載動畫
+            function hideLoadingAnimation() {
+                document.getElementById('loading-animation').style.display = 'none';
+            }
+
+            // 從資料夾名稱中提取日期
+            function extractDate(folderName) {
+                let parts = folderName.split('-');
+                let dateString = parts[parts.length - 1];
+                return new Date(dateString);
+            }
+
+            // 判斷是否滾動到頁面底部
+            function isScrollBottom() {
+                let screen_move = window.innerHeight + window.scrollY;
+                let doc_height = document.body.offsetHeight;
+                return screen_move >= doc_height;
+            }
+
+            $('#imageModal').on('hidden.bs.modal', function () {
+                if (swiper) {
+                    swiper.destroy();
+                    swiper = null;
                 }
-
-                if (imgSrc.includes('https://')) {
-                    let img = document.createElement('img');
-                    img.onload = function () {
-                        $('#carouselExampleControls').carousel(); // 圖片加載後重新初始化 Carousel
-                    };
-                    img.className = 'd-block w-100'; // 保持寬度為 100%
-                    img.style.maxHeight = '100vh'; // 限制最大高度
-                    img.style.objectFit = 'contain'; // 保持圖片比例
-                    img.src = imgSrc;
-                    carouselItem.appendChild(img);
-                } else {
-                    // 分割文字並創建兩個 span 元素
-                    let parts = imgSrc.split('-');
-                    let title = document.createElement('span');
-                    let date = document.createElement('span');
-
-                    title.textContent = parts[0];
-                    date.textContent = parts[1];
-
-                    let albumName = document.createElement('h1');
-                    albumName.className = 'd-block w-100 white-text';
-
-                    albumName.appendChild(title);
-                    albumName.appendChild(document.createElement('br')); // 添加換行
-                    albumName.appendChild(date);
-
-                    carouselItem.appendChild(albumName);
-                }
-
-                carouselInner.appendChild(carouselItem);
             });
 
-            // 移除 data-bs-ride 屬性以停止自動播放
-            document.getElementById('carouselExampleControls').removeAttribute('data-bs-ride');
-            $('#carouselExampleControls').carousel({
-                pause: true
-            });
-        }
+            // 初始化 Carousel 的函數
+            function initializeCarousel(clickedImgSrc) {
+                var carouselInner = document.querySelector('.carousel-inner');
+                carouselInner.innerHTML = ''; // 清空之前的圖片
 
-        let index = 0; // 圖片加載計數器
+                images.forEach((imgSrc, index) => {
+                    let carouselItem = document.createElement('div');
+                    carouselItem.className = 'carousel-item';
+                    if (imgSrc.replace('=1000', '') + '=s300' === clickedImgSrc) {
+                        carouselItem.classList.add('active'); // 為點擊的圖片添加 active 類
+                    }
 
-        // 加載更多圖片
-        function loadMoreImages() {
-            for (let i = 0; i < 14; i++) { // 每次加載14張圖片
-                if (index >= images.length) {
-                    break;
-                }
-                let img_container = document.getElementById('img-container');
-                if (images[index].includes('https://')) {
-                    let img_col = `
+                    if (imgSrc.includes('https://')) {
+                        let img = document.createElement('img');
+                        img.onload = function () {
+                            $('#carouselExampleControls').carousel(); // 圖片加載後重新初始化 Carousel
+                        };
+                        img.className = 'd-block w-100'; // 保持寬度為 100%
+                        img.style.maxHeight = '100vh'; // 限制最大高度
+                        img.style.objectFit = 'contain'; // 保持圖片比例
+                        img.src = imgSrc + '=s1000';
+                        carouselItem.appendChild(img);
+                    } else {
+                        // 分割文字並創建兩個 span 元素
+                        let parts = imgSrc.split('-');
+                        let title = document.createElement('span');
+                        let date = document.createElement('span');
+
+                        title.textContent = parts[0];
+                        date.textContent = parts[1];
+
+                        let albumName = document.createElement('h1');
+                        albumName.className = 'd-block w-100 white-text';
+
+                        albumName.appendChild(title);
+                        albumName.appendChild(document.createElement('br')); // 添加換行
+                        albumName.appendChild(date);
+
+                        carouselItem.appendChild(albumName);
+                    }
+
+                    carouselInner.appendChild(carouselItem);
+                });
+
+                // 移除 data-bs-ride 屬性以停止自動播放
+                document.getElementById('carouselExampleControls').removeAttribute('data-bs-ride');
+                $('#carouselExampleControls').carousel({
+                    pause: true
+                });
+            }
+
+            let index = 0; // 圖片加載計數器
+
+            // 加載更多圖片
+            function loadMoreImages() {
+                for (let i = 0; i < 14; i++) { // 每次加載14張圖片
+                    if (index >= images.length) {
+                        break;
+                    }
+                    let img_container = document.getElementById('img-container');
+                    if (images[index].includes('https://')) {
+                        let img_col = `
             <div class="col-lg-2 col-6 img-section">
                 <img class="art-img shadow" src="${images[index]}=s300" alt="">
             </div>`;
-                    img_container.innerHTML += img_col;
-                }
-                else {
-                    let parts = images[index].split('-');
-                    let dateString = parts[parts.length - 1];
-                    let titleString = parts[0];
-                    let title_col = `<h1 class="mt-5" style="text-align: justify">
+                        img_container.innerHTML += img_col;
+                    }
+                    else {
+                        let parts = images[index].split('-');
+                        let dateString = parts[parts.length - 1];
+                        let titleString = parts[0];
+                        let title_col = `<h1 class="mt-5" style="text-align: justify">
                                 <b>${titleString}</b>
                                 <span style="color:#92b7df">${dateString}</span>
                             </h1>`;
-                    img_container.innerHTML += title_col;
-                }
+                        img_container.innerHTML += title_col;
+                    }
 
-                index++;
+                    index++;
+                }
+                let imgSections = document.querySelectorAll('.img-section');
+                imgSections.forEach(section => {
+                    // 模擬圖片加載完成效果
+                    setTimeout(() => {
+                        section.classList.add('loaded');
+                    }, 300);
+                });
+
+                // 如果達到圖片列表末尾，顯示結束消息
+                if (index >= images.length && images.length != 0) {
+                    showEndOfPhotosMessage();
+                }
             }
-            let imgSections = document.querySelectorAll('.img-section');
-            imgSections.forEach(section => {
-                // 模擬圖片加載完成效果
-                setTimeout(() => {
-                    section.classList.add('loaded');
-                }, 300);
+
+            // 顯示已到達圖片列表末尾的消息
+            function showEndOfPhotosMessage() {
+                let photoEndMessage = document.getElementById('photo-list-end');
+                photoEndMessage.style.display = 'block';
+            }
+
+            // 監聽滾動事件，實現加載更多圖片
+            let debounceTimer;
+            window.addEventListener('scroll', function () {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(function () {
+                    if (isScrollBottom()) {
+                        loadMoreImages();
+                    }
+                }, 600); // 防抖動處理
             });
 
-            // 如果達到圖片列表末尾，顯示結束消息
-            if (index >= images.length && images.length != 0) {
-                showEndOfPhotosMessage();
-            }
-        }
-
-        // 顯示已到達圖片列表末尾的消息
-        function showEndOfPhotosMessage() {
-            let photoEndMessage = document.getElementById('photo-list-end');
-            photoEndMessage.style.display = 'block';
-        }
-
-        // 監聽滾動事件，實現加載更多圖片
-        let debounceTimer;
-        window.addEventListener('scroll', function () {
-            clearTimeout(debounceTimer);
-            debounceTimer = setTimeout(function () {
-                if (isScrollBottom()) {
-                    loadMoreImages();
+            // 點擊圖片顯示模態框並初始化 Carousel
+            document.getElementById('img-container').addEventListener('click', function (event) {
+                if (event.target.tagName === 'IMG') {
+                    let clickedImgSrc = event.target.src; // 獲取原始圖片URL
+                    initializeCarousel(clickedImgSrc);
+                    $('#imageModal').modal('show'); // 顯示模態框
                 }
-            }, 600); // 防抖動處理
-        });
+            });
 
-        // 點擊圖片顯示模態框並初始化 Carousel
-        document.getElementById('img-container').addEventListener('click', function (event) {
-            if (event.target.tagName === 'IMG') {
-                let clickedImgSrc = event.target.src; // 獲取原始圖片URL
-                initializeCarousel(clickedImgSrc);
-                $('#imageModal').modal('show'); // 顯示模態框
-            }
-        });
+            document.querySelector('.close-btn').addEventListener('click', function () {
+                $('#imageModal').modal('hide'); // 關閉模態框
+            });
+            // Carousel 觸摸滑動功能
+            let startX, endX;
+            const carousel = document.getElementById('carouselExampleControls');
 
-        document.querySelector('.close-btn').addEventListener('click', function () {
-            $('#imageModal').modal('hide'); // 關閉模態框
-        });
+            carousel.addEventListener('touchstart', e => {
+                startX = e.touches[0].clientX;
+            });
 
+            carousel.addEventListener('touchmove', e => {
+                endX = e.touches[0].clientX;
+            });
+
+            carousel.addEventListener('touchend', () => {
+                if (startX - endX > 50) {
+                    // 向左滑動
+                    $('#carouselExampleControls').carousel('next');
+                }
+                if (startX - endX < -50) {
+                    // 向右滑動
+                    $('#carouselExampleControls').carousel('prev');
+                }
+            });
+
+            // 初始化時執行圖片獲取
+            fetchImages();
+        });
 
     </script>
 
