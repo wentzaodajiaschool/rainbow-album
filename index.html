@@ -352,7 +352,7 @@
                 images.forEach((imgSrc, index) => {
                     let carouselItem = document.createElement('div');
                     carouselItem.className = 'carousel-item';
-                    if (imgSrc.replace('=1000', '') + '=s300' === clickedImgSrc) {
+                    if (imgSrc + '=s300' === clickedImgSrc) {
                         carouselItem.classList.add('active'); // 為點擊的圖片添加 active 類
                     }
 
@@ -364,7 +364,7 @@
                         img.className = 'd-block w-100'; // 保持寬度為 100%
                         img.style.maxHeight = '100vh'; // 限制最大高度
                         img.style.objectFit = 'contain'; // 保持圖片比例
-                        img.src = imgSrc + '=s1000';
+                        img.src = imgSrc;
                         carouselItem.appendChild(img);
                     } else {
                         // 分割文字並創建兩個 span 元素
