@@ -249,7 +249,7 @@
             z-index: 1050;
         }
 
-        .toast-custom  { 
+        .toast-custom {
             background-color: #cfcece !important;
             /* 淺灰色背景 */
             color: #333 !important;
@@ -464,9 +464,19 @@
                     }, 300);
                 });
 
-                // 如果達到圖片列表末尾，顯示結束消息
+                // 如果達到圖片列表末尾，顯示結束消息並停止顯示 Toast
                 if (index >= images.length && images.length != 0) {
                     showEndOfPhotosMessage();
+                } else {
+                    showToast('圖片載入中...'); // 如果還有圖片則顯示 Toast
+                }
+            }
+
+            function hideToast() {
+                var toastEl = document.getElementById('scrollToast');
+                var toast = bootstrap.Toast.getInstance(toastEl); // 獲取 Toast 實例
+                if (toast) {
+                    toast.hide();
                 }
             }
 
@@ -474,6 +484,8 @@
             function showEndOfPhotosMessage() {
                 let photoEndMessage = document.getElementById('photo-list-end');
                 photoEndMessage.style.display = 'block';
+                // 隱藏 Toast 消息
+                hideToast();
             }
 
             // 監聽滾動事件，實現加載更多圖片
@@ -481,8 +493,7 @@
             window.addEventListener('scroll', function () {
                 clearTimeout(debounceTimer);
                 debounceTimer = setTimeout(function () {
-                    if (isScrollBottom()) {
-                        showToast("照片載入中...");
+                    if (isScrollBottom() && index < images.length) {
                         loadMoreImages();
                     }
                 }, 300); // 防抖動處理
