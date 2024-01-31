@@ -59,7 +59,7 @@
 
             .art-img {
                 height: auto;
-                border-radius: 5%;
+                /* border-radius: 5%; */
             }
 
 
@@ -73,7 +73,7 @@
 
             .art-img {
                 height: auto;
-                border-radius: 5%;
+                /* border-radius: 5%; */
                 transition: all 0.3s;
                 cursor: pointer;
                 position: relative;
@@ -439,7 +439,7 @@
                     if (images[index].includes('https://')) {
                         let img_col = `
             <div class="col-lg-2 col-6 img-section">
-                <img class="art-img shadow" src="${images[index]}=s300" alt="">
+                <img class="art-img" style="border-style:groove;" src="${images[index]}=s300" alt="">
             </div>`;
                         img_container.innerHTML += img_col;
                     }
