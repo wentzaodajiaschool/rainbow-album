@@ -202,6 +202,17 @@
             right: 10px;
         }
 
+        .carousel-item img {
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+            max-height: 100vh;
+            /* 限制最大高度，避免超出螢幕 */
+            object-fit: contain;
+            /* 保持圖片比例 */
+        }
+
+
 
         /* 添加關閉按鈕樣式 */
         .close-btn {
@@ -329,12 +340,15 @@
             images.forEach((imgSrc, index) => {
                 let carouselItem = document.createElement('div');
                 carouselItem.className = 'carousel-item';
-                if (imgSrc + '=s300' === clickedImgSrc) {
+                if (imgSrc+'=s300' === clickedImgSrc) {
                     carouselItem.classList.add('active'); // 為點擊的圖片添加 active 類
                 }
 
                 if (imgSrc.includes('https://')) {
                     let img = document.createElement('img');
+                    img.onload = function() {
+                        $('#carouselExampleControls').carousel(); // 圖片加載後重新初始化 Carousel
+                    };
                     img.className = 'd-block w-100'; // 保持寬度為 100%
                     img.style.maxHeight = '100vh'; // 限制最大高度
                     img.style.objectFit = 'contain'; // 保持圖片比例
@@ -352,6 +366,9 @@
 
             // 移除 data-bs-ride 屬性以停止自動播放
             document.getElementById('carouselExampleControls').removeAttribute('data-bs-ride');
+            $('#carouselExampleControls').carousel({
+                pause: true
+            });
         }
 
         let index = 0; // 圖片加載計數器
