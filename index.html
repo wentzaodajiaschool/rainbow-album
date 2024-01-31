@@ -249,12 +249,12 @@
             z-index: 1050;
         }
 
-        .toast-custom {
-            background-color: #f0f0f0;
+        .toast-custom  { 
+            background-color: #f0f0f0 !important;
             /* 淺灰色背景 */
-            color: #333;
+            color: #333 !important;
             /* 文本顏色，可根據需要調整 */
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1) !important;
             /* 添加陰影 */
         }
     </style>
@@ -482,7 +482,7 @@
                 clearTimeout(debounceTimer);
                 debounceTimer = setTimeout(function () {
                     if (isScrollBottom()) {
-                        showToast("loading...");
+                        showToast("照片載入中...");
                         loadMoreImages();
                     }
                 }, 300); // 防抖動處理
