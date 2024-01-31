@@ -14,10 +14,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
     <style>
-        root .swiper-slide {
-            -webkit-transform: translateZ(0);
-            -webkit-backface-visibility: hidden;
-        }
 
         html,
         body {
@@ -349,14 +345,14 @@
             // 創建 Swiper 實例
             swiper = new Swiper('.swiper-container', {
                 initialSlide: startIndex, // 設置初始幻燈片
-                loop: true,
-                pagination: {
-                    el: '.swiper-pagination',
-                    type: 'bullets',
-                    clickable: true,
-                    dynamicBullets: true,
-                    dynamicMainBullets: 1
-                },
+                // loop: true,
+                // pagination: {
+                //     el: '.swiper-pagination',
+                //     type: 'bullets',
+                //     clickable: true,
+                //     dynamicBullets: true,
+                //     dynamicMainBullets: 1
+                // },
                 navigation: {
                     nextEl: '.swiper-button-next',
                     prevEl: '.swiper-button-prev',
@@ -442,7 +438,7 @@
         // 點擊圖片顯示模態框
         document.getElementById('img-container').addEventListener('click', function (event) {
             if (event.target.classList.contains('art-img')) {
-                let clickedImgSrc = event.target.src.replace('=s500', ''); // 獲取原始圖片URL
+                let clickedImgSrc = event.target.src.replace('=s400', '=s800'); // 獲取原始圖片URL
                 initializeSwiper(clickedImgSrc);
                 $('#imageModal').modal('show'); // 顯示模態框
             }
