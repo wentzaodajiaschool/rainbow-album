@@ -369,13 +369,6 @@
                 return screen_move >= doc_height;
             }
 
-            $('#imageModal').on('hidden.bs.modal', function () {
-                if (swiper) {
-                    swiper.destroy();
-                    swiper = null;
-                }
-            });
-
             // 初始化 Carousel 的函數
             function initializeCarousel(clickedImgSrc) {
                 var carouselInner = document.querySelector('.carousel-inner');
