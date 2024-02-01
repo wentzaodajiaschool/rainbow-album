@@ -381,60 +381,49 @@
                 var carouselInner = document.querySelector('.carousel-inner');
                 carouselInner.innerHTML = ''; // 清空之前的圖片
 
-                let activeIndex = images.findIndex(imgSrc => imgSrc + '=s300' === clickedImgSrc);
-
                 images.forEach((imgSrc, index) => {
-                    if (index >= activeIndex - 1 && index <= activeIndex + 1) { // 只加載當前圖片以及前後各一張
-                        let carouselItem = document.createElement('div');
-                        carouselItem.className = 'carousel-item';
-                        if (index === activeIndex) {
-                            carouselItem.classList.add('active'); // 為當前圖片添加 active 類
-                        }
+                    let carouselItem = document.createElement('div');
+                    carouselItem.className = 'carousel-item';
+                    if (imgSrc + '=s300' === clickedImgSrc) {
+                        carouselItem.classList.add('active'); // 為點擊的圖片添加 active 類
+                    }
 
-                        // 加載圖片
+                    if (imgSrc.includes('https://')) {
                         let img = document.createElement('img');
-                        img.className = 'd-block w-100';
-                        img.style.maxHeight = '100vh';
-                        img.style.objectFit = 'contain';
+                        img.onload = function () {
+                            $('#carouselExampleControls').carousel(); // 圖片加載後重新初始化 Carousel
+                        };
+                        img.className = 'd-block w-100'; // 保持寬度為 100%
+                        img.style.maxHeight = '100vh'; // 限制最大高度
+                        img.style.objectFit = 'contain'; // 保持圖片比例
                         img.src = imgSrc;
                         carouselItem.appendChild(img);
+                    } else {
+                        // 分割文字並創建兩個 span 元素
+                        let parts = imgSrc.split('-');
+                        let title = document.createElement('span');
+                        let date = document.createElement('span');
 
-                        carouselInner.appendChild(carouselItem);
+                        title.textContent = parts[0];
+                        date.textContent = parts[1];
+
+                        let albumName = document.createElement('h1');
+                        albumName.className = 'd-block w-100 white-text';
+
+                        albumName.appendChild(title);
+                        albumName.appendChild(document.createElement('br')); // 添加換行
+                        albumName.appendChild(date);
+
+                        carouselItem.appendChild(albumName);
                     }
+
+                    carouselInner.appendChild(carouselItem);
                 });
 
+                // 移除 data-bs-ride 屬性以停止自動播放
+                document.getElementById('carouselExampleControls').removeAttribute('data-bs-ride');
                 $('#carouselExampleControls').carousel({
                     pause: true
-                });
-
-                // 監聽 Carousel 切換事件，以動態加載圖片
-                $('#carouselExampleControls').on('slide.bs.carousel', function (e) {
-                    let nextSlideIndex = e.to;
-                    let totalItems = images.length;
-
-                    // 確定需要加載的圖片範圍
-                    let start = Math.max(0, nextSlideIndex - 1);
-                    let end = Math.min(totalItems - 1, nextSlideIndex + 1);
-                    
-                    // 加載或更新圖片
-                    for (let i = start; i <= end; i++) {
-                        if (!carouselInner.children[i]) {
-                            let carouselItem = document.createElement('div');
-                            carouselItem.className = 'carousel-item';
-                            if (i === nextSlideIndex) {
-                                carouselItem.classList.add('active');
-                            }
-
-                            let img = document.createElement('img');
-                            img.className = 'd-block w-100';
-                            img.style.maxHeight = '100vh';
-                            img.style.objectFit = 'contain';
-                            img.src = images[i];
-                            carouselItem.appendChild(img);
-
-                            carouselInner.appendChild(carouselItem);
-                        }
-                    }
                 });
             }
 
