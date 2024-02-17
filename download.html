@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebShare API Example</title>
+</head>
+<body>
+    <button onclick="webshare('Map_of_Spain_1490')">Share Image</button>
+
+    <script>
+        const URL = 'https://upload.wikimedia.org/wikipedia/commons/2/27/Map_of_Spain_1490.jpg';
+        const TYPE = 'image/jpeg';
+        const EXT = '.jpg';
+        const TITLE = "Map of Spain 1490";
+        const IS_SAFARI = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+
+        function webshare(text) {
+            let data = IS_SAFARI ? { files: [] } : { files: [], text: text, url: URL, title: TITLE };
+
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', URL, true);
+            xhr.responseType = 'arraybuffer';
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    var response = xhr.response;
+                    var blob = new File([response], text + EXT, { type: TYPE });
+                    data.files.push(blob);
+
+                    if (navigator.canShare && navigator.canShare(data)) {
+                        navigator.share(data)
+                        .then(function() {
+                            if (IS_SAFARI) {
+                                let dataText = { text: text, url: URL, title: TITLE };
+                                navigator.share(dataText);
+                            }
+                        })
+                        .catch(function(err) {
+                            console.error('Unsuccessful share ' + err);
+                        });
+                    }
+                } else {
+                    console.error('Failed to load ' + URL + ': ' + xhr.status);
+                }
+            };
+            xhr.send();
+        }
+    </script>
+</body>
+</html>
