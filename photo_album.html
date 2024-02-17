@@ -437,6 +437,13 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
 
+            function enableTooltips() {
+                var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+                var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                    return new bootstrap.Tooltip(tooltipTriggerEl);
+                });
+            }
+
             // 模態框打開時顯示分享按鈕
             $('#imageModal').on('show.bs.modal', function () {
                 if ($(window).width() <= 768) {
@@ -559,6 +566,8 @@
                         img.style.maxHeight = '100vh';
                         img.style.objectFit = 'contain';
                         img.setAttribute('data-src', imgSrc);
+                        img.setAttribute('data-bs-toggle', 'tooltip'); // 啟用tooltip
+                        img.setAttribute('title', '可以右鍵另存圖片'); // 設置提示文字
                         carouselItem.appendChild(img);
                     } else {
                         // 創建 h1 標題
@@ -576,6 +585,7 @@
                     }
 
                     carouselInner.appendChild(carouselItem);
+
                 });
 
                 document.getElementById('carouselExampleControls').removeAttribute('data-bs-ride');
@@ -611,7 +621,7 @@
 
                 // 初始時預加載當前、前後圖片
                 preloadImageForActiveSlideAndNeighbors();
-
+                enableTooltips();
             }
 
 
