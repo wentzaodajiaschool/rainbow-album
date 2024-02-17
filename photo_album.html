@@ -369,7 +369,6 @@
                 return screen_move >= doc_height;
             }
 
-            // 初始化 Carousel 的函數
             function initializeCarousel(clickedImgSrc) {
                 var carouselInner = document.querySelector('.carousel-inner');
                 carouselInner.innerHTML = ''; // 清空之前的圖片
@@ -381,44 +380,78 @@
                         carouselItem.classList.add('active'); // 為點擊的圖片添加 active 類
                     }
 
+                    // 根據條件創建 img 或 h1 元素
                     if (imgSrc.includes('https://')) {
+                        // 使用 data-src 存儲圖片地址
                         let img = document.createElement('img');
-                        img.onload = function () {
-                            $('#carouselExampleControls').carousel(); // 圖片加載後重新初始化 Carousel
-                        };
-                        img.className = 'd-block w-100'; // 保持寬度為 100%
-                        img.style.maxHeight = '100vh'; // 限制最大高度
-                        img.style.objectFit = 'contain'; // 保持圖片比例
-                        img.src = imgSrc;
+                        img.className = 'd-block w-100';
+                        img.style.maxHeight = '100vh';
+                        img.style.objectFit = 'contain';
+                        img.setAttribute('data-src', imgSrc);
                         carouselItem.appendChild(img);
                     } else {
-                        // 分割文字並創建兩個 span 元素
+                        // 創建 h1 標題
                         let parts = imgSrc.split('-');
                         let title = document.createElement('span');
                         let date = document.createElement('span');
-
                         title.textContent = parts[0];
                         date.textContent = parts[1];
-
                         let albumName = document.createElement('h1');
-                        albumName.className = 'd-block w-100 white-text';
-
+                        albumName.className = 'd-block w-100 text-white';
                         albumName.appendChild(title);
-                        albumName.appendChild(document.createElement('br')); // 添加換行
+                        albumName.appendChild(document.createElement('br'));
                         albumName.appendChild(date);
-
                         carouselItem.appendChild(albumName);
                     }
 
                     carouselInner.appendChild(carouselItem);
                 });
 
-                // 移除 data-bs-ride 屬性以停止自動播放
                 document.getElementById('carouselExampleControls').removeAttribute('data-bs-ride');
+
+                // $('#carouselExampleControls').carousel({
+                //     pause: true,
+                //     interval: false
+                // }).on('slide.bs.carousel', function (e) {
+                //     // 確保當前、前一張和後一張圖片被正確加載
+                //     preloadImageForActiveSlideAndNeighbors();
+                // });
+
+                function preloadImageForActiveSlideAndNeighbors() {
+                    let currentIndex = $('.carousel-item.active').index();
+                    let totalItems = $('.carousel-item').length;
+                    // 计算前一张和后两张图片的索引，考虑轮播的循环性
+                    let indexesToLoad = [
+                        currentIndex - 1 < 0 ? totalItems - 1 : currentIndex - 1, // 前一张
+                        currentIndex, // 当前张
+                        (currentIndex + 1) % totalItems, // 后一张
+                        (currentIndex + 2) % totalItems // 后两张
+                    ];
+
+                    indexesToLoad.forEach(index => {
+                        let img = $('.carousel-item').eq(index).find('img[data-src]');
+                        if (img.length && !img.attr('src')) {
+                            img.attr('src', img.data('src'));
+                        }
+                    });
+                }
+                
+
                 $('#carouselExampleControls').carousel({
-                    pause: true
+                    pause: true,
+                    interval: false
+                }).on('slide.bs.carousel', function (e) {
+                    preloadImageForActiveSlideAndNeighbors()
+                    // 等待輪播動作完成後再預加載圖片
+                    // setTimeout(preloadImageForActiveSlideAndNeighbors, 50);
                 });
+
+                // 初始時預加載當前、前後圖片
+                preloadImageForActiveSlideAndNeighbors();
+
             }
+
+
 
             let index = 0; // 圖片加載計數器
 
