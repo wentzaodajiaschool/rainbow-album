@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>文藻美語-活動剪影</title>
+    <title>文藻美語 活動剪影</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Swiper/8.4.5/swiper-bundle.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Swiper/8.4.5/swiper-bundle.min.css">
@@ -170,48 +170,21 @@
             }
         }
         .line-button {
+            position: relative;
+            /* 保留原有的樣式 */
+        }
+        .success-check {
             position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            padding: 10px 20px;
-            background-color: transparent;
-            color: white;
-            border: 2px solid white;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            z-index: 1002;
-        }
-        @media (min-width: 769px) {
-            .line-button {
-                display: none;
-            }
-        }
-        .success-toast {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: rgba(76, 175, 80, 0.9);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 5px;
-            display: flex;
-            align-items: center;
+            left: -25px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #4CAF50;
+            font-size: 20px;
             opacity: 0;
             transition: opacity 0.3s ease-in-out;
-            z-index: 2000;
         }
-
-        .success-toast.show {
+        .success-check.show {
             opacity: 1;
-        }
-
-        .success-toast::before {
-            content: '✓';
-            margin-right: 10px;
-            font-size: 20px;
         }
     </style>
 </head>
@@ -228,8 +201,6 @@
     </div>
 
     <div id="loading">載入中...</div>
-
-    <div id="success-toast" class="success-toast">照片已成功發送</div>
 
     <script>
         $(document).ready(function() {
@@ -422,14 +393,30 @@
                 });
 
                 if (liff.isInClient()) {
+                    const lineButtonContainer = $('<div>')
+                        .css({
+                            position: 'absolute',
+                            bottom: '20px',
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            display: 'flex',
+                            alignItems: 'center'
+                        });
+
+                    const successCheck = $('<span>')
+                        .addClass('success-check')
+                        .html('&#10004;'); // 勾號
+
                     const lineButton = $('<button>')
                         .addClass('line-button')
                         .text('透過Line取得照片')
                         .on('click', function() {
                             const currentPhoto = photos[swiper.activeIndex];
-                            sendImageToLine(currentPhoto);
+                            sendImageToLine(currentPhoto, successCheck);
                         });
-                    overlay.append(lineButton);
+
+                    lineButtonContainer.append(successCheck, lineButton);
+                    overlay.append(lineButtonContainer);
                 }
 
                 $(document).on('keydown.fullscreen', function(e) {
@@ -460,7 +447,7 @@
                 $('#loading').hide();
             }
 
-            function sendImageToLine(imageUrl) {
+            function sendImageToLine(imageUrl, successCheck) {
                 if (liff.isInClient()) {
                     liff.sendMessages([
                         {
@@ -470,19 +457,18 @@
                         }
                     ]).then(() => {
                         console.log('Image sent successfully');
-                        showSuccessToast();
+                        showSuccessCheck(successCheck);
                     }).catch((error) => {
                         console.error('Error sending image:', error);
                     });
                 }
             }
 
-            function showSuccessToast() {
-                const toast = $('#success-toast');
-                toast.addClass('show');
+            function showSuccessCheck(successCheck) {
+                successCheck.addClass('show');
                 setTimeout(() => {
-                    toast.removeClass('show');
-                }, 3000); // 3秒後隱藏提示
+                    successCheck.removeClass('show');
+                }, 1000); // 1秒後隱藏勾號
             }
 
             loadAlbums();
