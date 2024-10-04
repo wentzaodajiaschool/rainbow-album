@@ -1,758 +1,404 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>照片展示</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-F3w7mX95PdgyTmZZMECAngseQB83DfGTowi0iMjiWaeVhAn4FJkqJByhZMI3AhiU" crossorigin="anonymous">
+    <title>文藻美語-精彩回顧</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Swiper/8.4.5/swiper-bundle.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Swiper/8.4.5/swiper-bundle.min.css">
     <style>
-        html,
         body {
-            height: 100%;
+            font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
-            /* overflow: hidden; */
-            /* 防止頁面滾動 */
+            background-color: #f0f0f0;
+            overflow-x: hidden;
         }
-
-        .loading {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 20px;
-            color: #007bff;
-            display: none;
-            /* 預設不顯示 */
-        }
-
-
-        .card-img-top,
-        .art-img {
-            width: 100%;
-            object-fit: cover;
-        }
-
-        .row>* {
-            padding-right: calc(var(--bs-gutter-x) * .15);
-            /* 減少右側間距 */
-            padding-left: calc(var(--bs-gutter-x) * .15);
-            /* 減少左側間距 */
-        }
-
-        .g-4,
-        .gy-4 {
-            --bs-gutter-y: 0.5rem;
-            /* 減少上下間距 */
-        }
-
-        /* 小螢幕最大到 700px，700 以下執行 */
-        @media (max-width: 700px) {
-            .card-img-top {
-                height: auto;
-            }
-
-            .art-img {
-                height: auto;
-                /* border-radius: 5%; */
-            }
-
-
-        }
-
-        /* 大螢幕最小到 700px，700 以上執行 */
-        @media (min-width: 700px) {
-            .card-img-top {
-                height: 25vw;
-            }
-
-            .art-img {
-                height: auto;
-                /* border-radius: 5%; */
-                transition: all 0.3s;
-                cursor: pointer;
-                position: relative;
-                z-index: 0;
-            }
-
-            .art-img:hover {
-                z-index: 1;
-            }
-        }
-
-        .img-section {
-            opacity: 0;
-            /* 初始透明度設為 0 */
-            transform: translateY(20px);
-            /* 初始時向下移動一點 */
-            transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
-        }
-
-        .img-section.loaded {
-            opacity: 1;
-            /* 完全不透明 */
-            transform: translateY(0);
-            /* 恢復到原始位置 */
-        }
-
-        .loading {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 40px;
-            height: 40px;
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #3498db;
-            border-radius: 50%;
-            display: none;
-            /* 預設不顯示 */
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            0% {
-                transform: translate(-50%, -50%) rotate(0deg);
-            }
-
-            100% {
-                transform: translate(-50%, -50%) rotate(360deg);
-            }
-        }
-
-        .photo-end-message {
-            text-align: center;
-            padding: 20px;
-            font-size: 16px;
-            color: #666;
-            display: none;
-            /* 初始狀態不顯示 */
-            animation: bounce 1s ease;
-        }
-
-        @keyframes bounce {
-
-            0%,
-            20%,
-            50%,
-            80%,
-            100% {
-                transform: translateY(0);
-            }
-
-            40% {
-                transform: translateY(-30px);
-            }
-
-            60% {
-                transform: translateY(-15px);
-            }
-        }
-
-        /* 全螢幕 Modal 樣式 */
-        .modal-fullscreen {
-            width: 100vw;
-            height: 100vh;
-            margin: 0;
-            top: 0;
-            left: 0;
-            overflow: hidden;
-        }
-
-        .modal-dialog {
-            max-width: 100%;
-            height: 100%;
-            margin: 0;
-            /* 移除外邊距 */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .modal-content {
-            width: 100%;
-            height: 100%;
-            background-color: black;
-            /* 設置背景顏色 */
-            border-radius: 0;
-        }
-
-        .modal-body {
-            width: 100%;
-            height: 100%;
+        .album {
+            margin-bottom: 40px;
             padding: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-
-        .white-text {
-            color: white;
-        }
-
-        .carousel-control-prev,
-        .carousel-control-next {
-            position: fixed;
-            top: 50%;
-            /* 置中對齊 */
-            width: auto;
-            /* 自動寬度 */
-            /* 垂直居中 */
-            transform: translateY(-50%);
-            /* 對齊到中心點 */
-            z-index: 5;
-        }
-
-        .carousel-control-prev {
-            left: 10px;
-        }
-
-        .carousel-control-next {
-            right: 10px;
-        }
-
-        .carousel-item img {
-            display: block;
+            max-width: 1200px;
             margin-left: auto;
             margin-right: auto;
-            max-height: 100vh;
-            /* 限制最大高度，避免超出螢幕 */
-            object-fit: contain;
-            /* 保持圖片比例 */
+        }
+        .album-title {
+            font-size: 36px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+            padding: 0 10px;
+        }
+        .album-date {
+            color: #92b7df;
+            margin-right: 10px;
+        }
+        .photo-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 10px;
+            padding: 0 10px;
+            margin-top: 30px; /* 添加頂部 margin */
+        }
+        .photo-item {
+            position: relative;
+            padding-bottom: 100%;
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .photo-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        .photo-item img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 4px;
+            transition: opacity 0.3s ease;
+        }
+        .photo-item.loading::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+        }
+        @keyframes loading {
+            0% {
+                background-position: 200% 0;
+            }
+            100% {
+                background-position: -200% 0;
+            }
+        }
+        .youtube-container {
+            position: relative;
+            padding-bottom: 28.125%; /* 16:9 寬高比的一半 */
+            height: 0;
+            overflow: hidden;
+            max-width: 50%;
+            margin: 20px auto 30px; /* 增加底部 margin */
+            border-radius: 10px; /* 添加圓角 */
+        }
+        .youtube-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 10px; /* 添加圓角 */
         }
 
-
-
-        /* 添加關閉按鈕樣式 */
-        .close-btn {
-            position: fixed;
-            right: 20px;
-            top: 20px;
-            background: none;
-            border: none;
-            font-size: 30px;
-            color: white;
-            /* 可根據背景顏色調整 */
+        @media (max-width: 768px) {
+            .photo-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .swiper-button-next, .swiper-button-prev {
+                display: none;
+            }
+            .youtube-container {
+                max-width: 100%;
+                padding-bottom: 56.25%; /* 恢復到原來的 16:9 寬高比 */
+                margin-bottom: 20px; /* 在小螢幕上減少底部 margin */
+            }
+            .photo-grid {
+                margin-top: 20px; /* 在小螢幕上減少頂部 margin */
+            }
         }
 
-        #shareBtnContainer {
-            position: fixed;
-            /* 或使用 absolute 如果不需要在滾動時保持位置 */
-            top: 20px;
-            /* 設置距離頂部的距離 */
-            left: 50%;
-            /* 設置左側距離，與transform結合使用來實現完全居中 */
-            transform: translateX(-50%);
-            /* 向左移動元素自身寬度的50%，以實現水平居中 */
-            z-index: 1000;
-            /* 確保按鈕在頁面上的其他元素之上 */
-            text-align: center;
-            padding: 20px;
-        }
-
-        .btn-outline-primary {
-            /* 如果需要，這裡可以添加或調整按鈕的額外樣式 */
-        }
-
-
-        .toast-container {
+        .fullscreen-overlay {
+            display: none;
             position: fixed;
             top: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 1050;
-        }
-
-        .toast-custom {
-            background-color: #cfcece !important;
-            /* 淺灰色背景 */
-            color: #333 !important;
-            /* 文本顏色，可根據需要調整 */
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1) !important;
-            /* 添加陰影 */
-        }
-
-        .theme-switch-wrapper {
-            position: fixed;
-            right: 30px;
-            bottom: 30px;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.9);
             z-index: 1000;
         }
-
-        .label {
-            background-color: #87CEEB;
-            border-radius: 50px;
-            cursor: pointer;
+        .swiper {
+            width: 100%;
+            height: 100%;
+        }
+        .swiper-slide {
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            padding: 5px;
-            position: relative;
-            height: 26px;
-            width: 50px;
-            transform: scale(1.5);
-            transition: background-color 0.2s linear;
+            justify-content: center;
         }
-
-        .checkbox:checked+.label {
-            background-color: #111;
+        .swiper-slide img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
         }
-
-        .label .ball {
-            background-color: #fff;
-            border-radius: 50%;
+        #loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+        }
+        .close-button {
             position: absolute;
-            top: 2px;
-            left: 2px;
-            height: 22px;
-            width: 22px;
-            transform: translateX(0px);
-            transition: transform 0.2s linear;
+            top: 20px;
+            right: 20px;
+            color: white;
+            font-size: 30px;
+            cursor: pointer;
+            z-index: 1001;
         }
-
-        .checkbox {
-            opacity: 0;
-            position: absolute;
+        .swiper-button-next, .swiper-button-prev {
+            color: white;
         }
-
-        .checkbox:checked+.label .ball {
-            transform: translateX(24px);
+        @media (max-width: 768px) {
+            .photo-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .swiper-button-next, .swiper-button-prev {
+                display: none;
+            }
         }
-
-        .fa-moon {
-            color: #f1c40f;
-        }
-
-        .fa-sun {
-            color: #ffff00;
-        }
-
-        body.dark {
-            background-color: #3f4652;
-            color: #ffffff;
-        }
-
-        /* 按鈕的pill造型和響應式顯示 */
-        .btn-pill {
-            border-radius: 50rem;
-            /* 創建pill形狀按鈕 */
-            padding: 10px 20px;
-            /* 按鈕內邊距 */
-        }
-
-        /* 默認情況下不顯示分享按鈕容器 */
-        /* #shareBtnContainer { */
-            /* display: none; */
-            /* 初始不顯示 */
-        /* } */
-
-        /* 媒體查詢：在小屏幕設備上顯示分享按鈕 */
-        /* @media (max-width: 768px) { */
-
-            /* 768px為手機和平板電腦的常見斷點 */
-            /* #shareBtnContainer { */
-                /* display: block; */
-                /* 在小屏幕設備上顯示 */
-            /* } */
-        /* } */
     </style>
 </head>
-
 <body>
-    <div id="loading-animation" class="loading"></div>
-
-    <!-- 模態框 -->
-    <div class="modal fade" id="imageModal" data-bs-backdrop="static" tabindex="-1">
-        <div class="modal-dialog modal-fullscreen">
-            <div class="modal-content">
-                <div class="modal-body d-flex flex-column align-items-center">
-                    <!-- Bootstrap Carousel -->
-                    <div id="carouselExampleControls" class="carousel slide" data-bs-touch="true">
-                        <!-- 在這裡添加關閉按鈕 -->
-                        <button class="close-btn" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-
-                        <div class="carousel-inner"></div>
-                        <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleControls"
-                            data-bs-slide="prev">
-                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                            <span class="visually-hidden">Previous</span>
-                        </button>
-                        <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleControls"
-                            data-bs-slide="next">
-                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                            <span class="visually-hidden">Next</span>
-                        </button>
-                    </div>
-                    <!-- <div id="shareBtnContainer" style="text-align: center; padding: 20px;">
-                        <button id="shareBtn" title="Share Image" class="btn btn-outline-primary btn-pill"><i
-                                class="fas fa-share-alt"></i> Share</button>
-                    </div> -->
-                </div>
-
-            </div>
+    <div id="albums-container"></div>
+    
+    <div class="fullscreen-overlay">
+        <div class="close-button">&times;</div>
+        <div class="swiper">
+            <div class="swiper-wrapper"></div>
+            <div class="swiper-button-next"></div>
+            <div class="swiper-button-prev"></div>
         </div>
     </div>
 
-    <!-- 展示區 -->
-    <div class="container my-5">
-        <div id="img-container" class="row g-4 justify-content-start text-center"></div>
-    </div>
-
-    <div id="photo-list-end" class="photo-end-message">
-        沒有更多照片了
-    </div>
-
-    <!-- Toast 容器 -->
-    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 11">
-        <!-- Toast -->
-        <div id="scrollToast" class="toast toast-custom align-items-center text-white bg-primary border-0" role="alert"
-            aria-live="assertive" aria-atomic="true">
-            <div class="d-flex">
-                <div class="toast-body">
-                </div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
-                    aria-label="Close"></button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 主題交換 -->
-    <div class="theme-switch-wrapper">
-        <input type="checkbox" class="checkbox" id="chk" />
-        <label class="label" for="chk">
-            <i class="fas fa-moon"></i>
-            <i class="fas fa-sun"></i>
-            <div class="ball"></div>
-        </label>
-    </div>
+    <div id="loading">載入中...</div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
+        $(document).ready(function() {
+            let swiper;
+            let currentPage = 1;
+            const itemsPerPage = 30;
+            let allFolders = [];
+            let isLoading = false;
 
-            function enableTooltips() {
-                var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-                var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-                    return new bootstrap.Tooltip(tooltipTriggerEl);
-                });
-            }
-
-            // 模態框打開時顯示分享按鈕
-            $('#imageModal').on('show.bs.modal', function () {
-                if ($(window).width() <= 768) {
-                    $('#shareBtnContainer').css('display', 'block'); // 顯示分享按鈕容器
-                }
-            });
-
-            // 模態框關閉時隱藏分享按鈕
-            $('#imageModal').on('hidden.bs.modal', function () {
-                $('#shareBtnContainer').css('display', 'none'); // 隱藏分享按鈕容器
-            });
-
-            // 螢幕放大或縮小時顯示或隱藏分享按鈕
-            $(window).resize(function () {
-                if ($('#imageModal').hasClass('show') && $(window).width() <= 768) {
-                    $('#shareBtnContainer').css('display', 'block'); // 在小屏幕设备上显示
-                } else {
-                    $('#shareBtnContainer').css('display', 'none'); // 否则隐藏
-                }
-            });
-
-            // 分享按鈕點擊事件
-            // document.getElementById('shareBtn').addEventListener('click', function () {
-            //     const activeImage = document.querySelector('.carousel-item.active img'); // 獲得當前激活的圖片
-            //     if (activeImage) {
-            //         const imageUrl = activeImage.getAttribute('src') || activeImage.getAttribute('data-src'); // 獲得圖片URL
-            //         if (navigator.share) {
-            //             navigator.share({
-            //                 title: "Check out this image!",
-            //                 url: imageUrl
-            //             }).then(() => {
-            //                 console.log('Sharing success!');
-            //             }).catch((error) => {
-            //                 console.error('Sharing failed', error);
-            //             });
-            //         } else {
-            //             // 如果不支持 Web Share API，則顯示提示
-            //             alert("無法分享圖片，請長按圖片下載");
-            //             console.log('Web Share API not supported.');
-            //         }
-            //     } else {
-            //         alert('No active image found.'); // 如果沒有圖片則顯示提示
-            //     }
-            // });
-
-
-            const chk = document.getElementById('chk');
-            chk.addEventListener('change', () => {
-                document.body.classList.toggle('dark');
-            });
-
-
-            let images = []; // 初始化圖片URL陣列
-            // AJAX請求從伺服器獲取圖片URL
-            function fetchImages() {
-                showLoadingAnimation(); // 顯示加載動畫
+            function loadAlbums() {
+                showLoadingAnimation();
                 fetch('https://script.google.com/macros/s/AKfycbx7gmCRh3kx_1X4n4ffNmj0TXZ0AhwKwIWhDp9ge6yojGKfogArrBxgUmKD01xR5iLV1A/exec')
                     .then(response => response.json())
                     .then(data => {
-                        // 對獲取的資料進行排序
-                        data.folders.sort((a, b) => {
+                        console.log('Fetched data:', data); // 添加這行來記錄整個數據
+                        allFolders = data.folders.sort((a, b) => {
                             let dateA = extractDate(a.folderName);
                             let dateB = extractDate(b.folderName);
                             return dateB - dateA;
                         });
-
-                        // 遍歷資料夾並將圖片URL添加到 images 陣列
-                        data.folders.forEach(folder => {
-                            images.push(folder.folderName);
-                            folder.photos.forEach(photoUrl => {
-                                images.push(photoUrl);
-                            });
-                        });
-
-                        loadMoreImages(); // 加載更多圖片
-                        hideLoadingAnimation(); // 隱藏加載動畫
+                        console.log('Sorted folders:', allFolders); // 添加這行來記錄排序後的文件夾
+                        loadMoreAlbums();
+                        hideLoadingAnimation();
+                    })
+                    .catch(error => {
+                        console.error('Error fetching data:', error);
+                        hideLoadingAnimation();
                     });
             }
 
-            // 顯示加載動畫
-            function showLoadingAnimation() {
-                document.getElementById('loading-animation').style.display = 'block';
-            }
+            function loadMoreAlbums() {
+                if (isLoading) return;
+                isLoading = true;
+                showLoadingAnimation();
 
-            // 隱藏加載動畫
-            function hideLoadingAnimation() {
-                document.getElementById('loading-animation').style.display = 'none';
-            }
+                const startIndex = (currentPage - 1) * itemsPerPage;
+                const endIndex = startIndex + itemsPerPage;
+                const foldersToLoad = allFolders.slice(startIndex, endIndex);
 
-            // 從資料夾名稱中提取日期
-            function extractDate(folderName) {
-                let parts = folderName.split('-');
-                let dateString = parts[parts.length - 1];
-                return new Date(dateString);
-            }
+                const container = $('#albums-container');
+                foldersToLoad.forEach(folder => {
+                    console.log('Processing folder:', folder);
 
-            // 判斷是否滾動到頁面底部
-            function isScrollBottom() {
-                let screen_move = window.innerHeight + window.scrollY;
-                let doc_height = document.body.offsetHeight;
-                return screen_move >= doc_height;
-            }
+                    const albumElement = $('<div>').addClass('album');
+                    const titleParts = folder.folderName.split('-');
+                    const date = titleParts.shift(); // 提取日期部分
+                    const title = titleParts.join(' '); // 剩餘部分作為標題，用空格連接
 
-            function initializeCarousel(clickedImgSrc) {
-                var carouselInner = document.querySelector('.carousel-inner');
-                carouselInner.innerHTML = ''; // 清空之前的圖片
+                    const titleElement = $('<div>').addClass('album-title');
+                    titleElement.append($('<span>').addClass('album-date').text(date));
+                    titleElement.append(document.createTextNode(' ' + title)); // 添加空格和標題
 
-                images.forEach((imgSrc, index) => {
-                    let carouselItem = document.createElement('div');
-                    carouselItem.className = 'carousel-item';
-                    if (imgSrc + '=s300' === clickedImgSrc) {
-                        carouselItem.classList.add('active'); // 為點擊的圖片添加 active 類
+                    albumElement.append(titleElement);
+
+                    let hasYouTube = false;
+
+                    // 如果有 YouTube 連結，先添加 YouTube 容器
+                    if (folder.youtube) {
+                        console.log('YouTube link found:', folder.youtube);
+                        const youtubeContainer = $('<div>').addClass('youtube-container');
+                        const iframe = $('<iframe>')
+                            .attr('src', `https://www.youtube.com/embed/${folder.youtube}`)
+                            .attr('frameborder', '0')
+                            .attr('allowfullscreen', '');
+                        youtubeContainer.append(iframe);
+                        albumElement.append(youtubeContainer);
+                        console.log('YouTube container added');
+                        hasYouTube = true;
                     }
 
-                    // 根據條件創建 img 或 h1 元素
-                    if (imgSrc.includes('https://')) {
-                        // 使用 data-src 存儲圖片地址
-                        let img = document.createElement('img');
-                        img.className = 'd-block w-100';
-                        img.style.maxHeight = '100vh';
-                        img.style.objectFit = 'contain';
-                        img.setAttribute('data-src', imgSrc);
-                        img.setAttribute('data-bs-toggle', 'tooltip'); // 啟用tooltip
-                        img.setAttribute('title', '可以右鍵另存圖片'); // 設置提示文字
-                        carouselItem.appendChild(img);
-                    } else {
-                        // 創建 h1 標題
-                        let parts = imgSrc.split('-');
-                        let title = document.createElement('span');
-                        let date = document.createElement('span');
-                        title.textContent = parts[0];
-                        date.textContent = parts[1];
-                        let albumName = document.createElement('h1');
-                        albumName.className = 'd-block w-100 text-white';
-                        albumName.appendChild(title);
-                        albumName.appendChild(document.createElement('br'));
-                        albumName.appendChild(date);
-                        carouselItem.appendChild(albumName);
+                    // 然後添加照片網格
+                    if (folder.photos && folder.photos.length > 0) {
+                        const photoGrid = $('<div>').addClass('photo-grid');
+                        if (hasYouTube) {
+                            photoGrid.addClass('with-youtube');
+                        }
+                        folder.photos.forEach(photo => {
+                            const photoItem = $('<div>').addClass('photo-item');
+                            const img = $('<img>')
+                                .attr('data-src', photo + '=s300-c')
+                                .attr('data-full', photo)
+                                .on('click', function() {
+                                    openFullscreen(folder.photos, $(this).parent().index());
+                                });
+                            photoItem.append(img);
+                            photoGrid.append(photoItem);
+                        });
+                        albumElement.append(photoGrid);
                     }
 
-                    carouselInner.appendChild(carouselItem);
-
+                    container.append(albumElement);
                 });
 
-                document.getElementById('carouselExampleControls').removeAttribute('data-bs-ride');
+                currentPage++;
+                isLoading = false;
+                hideLoadingAnimation();
+                lazyLoadImages();
+            }
 
-                function preloadImageForActiveSlideAndNeighbors() {
-                    let currentIndex = $('.carousel-item.active').index();
-                    let totalItems = $('.carousel-item').length;
-                    // 獲取當前、前一張和後一張圖片的索引
-                    let indexesToLoad = [
-                        currentIndex - 1 < 0 ? totalItems - 1 : currentIndex - 1, // 前一張
-                        currentIndex, // 當前
-                        (currentIndex + 1) % totalItems, // 後一張
-                        (currentIndex + 2) % totalItems // 後兩張
-                    ];
-
-                    indexesToLoad.forEach(index => {
-                        let img = $('.carousel-item').eq(index).find('img[data-src]');
-                        if (img.length && !img.attr('src')) {
-                            img.attr('src', img.data('src'));
+            function lazyLoadImages() {
+                const images = $('img[data-src]');
+                const observer = new IntersectionObserver((entries, observer) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            const img = entry.target;
+                            img.src = img.dataset.src;
+                            img.onload = () => {
+                                img.parentElement.classList.remove('loading');
+                            };
+                            observer.unobserve(img);
                         }
                     });
-                }
-
-
-                $('#carouselExampleControls').carousel({
-                    pause: true,
-                    interval: false
-                }).on('slide.bs.carousel', function (e) {
-                    preloadImageForActiveSlideAndNeighbors()
-                    // 等待輪播動作完成後再預加載圖片
-                    // setTimeout(preloadImageForActiveSlideAndNeighbors, 50);
                 });
 
-                // 初始時預加載當前、前後圖片
-                preloadImageForActiveSlideAndNeighbors();
-                if ($(window).width() >= 768) {
-                    enableTooltips();
-                }
+                images.each(function() {
+                    $(this).parent().addClass('loading');
+                    observer.observe(this);
+                });
             }
 
+            function extractDate(folderName) {
+                const match = folderName.match(/\d{4}\/\d{2}\/\d{2}/);
+                return match ? new Date(match[0]) : new Date(0);
+            }
 
+            function openFullscreen(photos, index) {
+                const overlay = $('.fullscreen-overlay');
+                const swiperWrapper = overlay.find('.swiper-wrapper');
+                swiperWrapper.empty();
 
-            let index = 0; // 圖片加載計數器
-
-            // 加載更多圖片
-            function loadMoreImages() {
-                for (let i = 0; i < 14; i++) { // 每次加載14張圖片
-                    if (index >= images.length) {
-                        break;
-                    }
-                    let img_container = document.getElementById('img-container');
-                    if (images[index].includes('https://')) {
-                        let img_col = `
-            <div class="col-lg-2 col-6 img-section">
-                <img class="art-img" style="border-color:#cfcece; border-style:solid;border-width:1px;" src="${images[index]}=s300" alt="">
-            </div>`;
-                        img_container.innerHTML += img_col;
-                    }
-                    else {
-                        let parts = images[index].split('-');
-                        let dateString = parts[parts.length - 1];
-                        let titleString = parts[0];
-                        let title_col = `<h1 class="mt-5" style="text-align: justify">
-                                <b>${titleString}</b>
-                                <span style="color:#92b7df">${dateString}</span>
-                            </h1>`;
-                        img_container.innerHTML += title_col;
-                    }
-
-                    index++;
-                }
-                let imgSections = document.querySelectorAll('.img-section');
-                imgSections.forEach(section => {
-                    // 模擬圖片加載完成效果
-                    setTimeout(() => {
-                        section.classList.add('loaded');
-                    }, 300);
+                photos.forEach((photo, i) => {
+                    const slide = $('<div>').addClass('swiper-slide');
+                    const img = $('<img>').attr('data-src', photo);
+                    slide.append(img);
+                    swiperWrapper.append(slide);
                 });
 
-                // 如果達到圖片列表末尾，顯示結束消息並停止顯示 Toast
-                if (index >= images.length && images.length != 0) {
-                    showEndOfPhotosMessage();
-                } else {
-                    showToast('圖片載入中...'); // 如果還有圖片則顯示 Toast
+                overlay.show();
+
+                if (swiper) {
+                    swiper.destroy();
                 }
-            }
 
-            function hideToast() {
-                var toastEl = document.getElementById('scrollToast');
-                var toast = bootstrap.Toast.getInstance(toastEl); // 獲取 Toast 實例
-                if (toast) {
-                    toast.hide();
-                }
-            }
-
-            // 顯示已到達圖片列表末尾的消息
-            function showEndOfPhotosMessage() {
-                let photoEndMessage = document.getElementById('photo-list-end');
-                photoEndMessage.style.display = 'block';
-                // 隱藏 Toast 消息
-                hideToast();
-            }
-
-            // 監聽滾動事件，實現加載更多圖片
-            let debounceTimer;
-            window.addEventListener('scroll', function () {
-                clearTimeout(debounceTimer);
-                debounceTimer = setTimeout(function () {
-                    if (isScrollBottom() && index < images.length) {
-                        loadMoreImages();
+                swiper = new Swiper('.swiper', {
+                    initialSlide: index,
+                    navigation: {
+                        nextEl: '.swiper-button-next',
+                        prevEl: '.swiper-button-prev',
+                    },
+                    lazy: {
+                        loadPrevNext: true,
+                        loadPrevNextAmount: 2,
+                    },
+                    on: {
+                        init: function() {
+                            // 確保初始顯示的圖片被加載
+                            const activeSlide = this.slides[this.activeIndex];
+                            const img = activeSlide.querySelector('img');
+                            if (img.getAttribute('data-src') && !img.src) {
+                                img.src = img.getAttribute('data-src');
+                            }
+                        },
+                        slideChange: function () {
+                            const activeIndex = this.activeIndex;
+                            this.slides.forEach((slide, i) => {
+                                const img = slide.querySelector('img');
+                                if (Math.abs(i - activeIndex) <= 2) {
+                                    if (img.getAttribute('data-src') && !img.src) {
+                                        img.src = img.getAttribute('data-src');
+                                    }
+                                } else if (Math.abs(i - activeIndex) > 2) {
+                                    if (img.src) {
+                                        img.removeAttribute('src');
+                                    }
+                                }
+                            });
+                        }
                     }
-                }, 300); // 防抖動處理
-            });
+                });
 
-            // 點擊圖片顯示模態框並初始化 Carousel
-            document.getElementById('img-container').addEventListener('click', function (event) {
-                if (event.target.tagName === 'IMG') {
-                    let clickedImgSrc = event.target.src; // 獲取原始圖片URL
-                    initializeCarousel(clickedImgSrc);
-                    $('#imageModal').modal('show'); // 顯示模態框
-                }
-            });
+                $(document).on('keydown.fullscreen', function(e) {
+                    if (e.key === 'Escape') {
+                        closeFullscreen();
+                    }
+                });
 
-            document.querySelector('.close-btn').addEventListener('click', function () {
-                $('#imageModal').modal('hide'); // 關閉模態框
-            });
-            // Carousel 觸摸滑動功能
-            let startX, endX;
-            const carousel = document.getElementById('carouselExampleControls');
+                overlay.on('click', function(e) {
+                    if ($(e.target).closest('.swiper-slide, .swiper-button-next, .swiper-button-prev').length === 0) {
+                        closeFullscreen();
+                    }
+                });
 
-            carousel.addEventListener('touchstart', e => {
-                startX = e.touches[0].clientX;
-            });
-
-            carousel.addEventListener('touchmove', e => {
-                endX = e.touches[0].clientX;
-            });
-
-            carousel.addEventListener('touchend', () => {
-                if (startX - endX > 50) {
-                    // 向左滑動
-                    $('#carouselExampleControls').carousel('next');
-                }
-                if (startX - endX < -50) {
-                    // 向右滑動
-                    $('#carouselExampleControls').carousel('prev');
-                }
-            });
-
-            // 顯示 Toast 函數
-            function showToast(message) {
-                let toastContainer = document.querySelector('.toast-container');
-                let toastBody = toastContainer.querySelector('.toast-body');
-                toastBody.textContent = message;
-                let toast = new bootstrap.Toast(toastContainer.querySelector('.toast'), { delay: 500 }); // 顯示 2 秒
-                toast.show();
+                $('.close-button').on('click', closeFullscreen);
             }
 
-            // 初始化時執行圖片獲取
-            fetchImages();
+            function closeFullscreen() {
+                $('.fullscreen-overlay').hide();
+                $(document).off('keydown.fullscreen');
+            }
+
+            function showLoadingAnimation() {
+                $('#loading').show();
+            }
+
+            function hideLoadingAnimation() {
+                $('#loading').hide();
+            }
+
+            loadAlbums();
+
+            $(window).on('scroll', function() {
+                if ($(window).scrollTop() + $(window).height() > $(document).height() - 100) {
+                    loadMoreAlbums();
+                }
+            });
         });
-
     </script>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-/bQdsTh/da6pkI1MST/rWKFNjaCP5gBSY4sEBT38Q/9RBh9AH40zEOg7Hlq2THRZ"
-        crossorigin="anonymous"></script>
 </body>
-
 </html>
