@@ -188,6 +188,31 @@
                 display: none;
             }
         }
+        .success-toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(76, 175, 80, 0.9);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+            z-index: 2000;
+        }
+
+        .success-toast.show {
+            opacity: 1;
+        }
+
+        .success-toast::before {
+            content: '✓';
+            margin-right: 10px;
+            font-size: 20px;
+        }
     </style>
 </head>
 <body>
@@ -203,6 +228,8 @@
     </div>
 
     <div id="loading">載入中...</div>
+
+    <div id="success-toast" class="success-toast">照片已成功發送</div>
 
     <script>
         $(document).ready(function() {
@@ -443,10 +470,19 @@
                         }
                     ]).then(() => {
                         console.log('Image sent successfully');
+                        showSuccessToast();
                     }).catch((error) => {
                         console.error('Error sending image:', error);
                     });
                 }
+            }
+
+            function showSuccessToast() {
+                const toast = $('#success-toast');
+                toast.addClass('show');
+                setTimeout(() => {
+                    toast.removeClass('show');
+                }, 3000); // 3秒後隱藏提示
             }
 
             loadAlbums();
