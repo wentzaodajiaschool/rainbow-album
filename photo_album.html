@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>文藻美語-精彩回顧</title>
+    <title>文藻美語-活動剪影</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Swiper/8.4.5/swiper-bundle.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Swiper/8.4.5/swiper-bundle.min.css">
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -168,6 +169,25 @@
                 display: none;
             }
         }
+        .line-button {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 10px 20px;
+            background-color: transparent;
+            color: white;
+            border: 2px solid white;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            z-index: 1002;
+        }
+        @media (min-width: 769px) {
+            .line-button {
+                display: none;
+            }
+        }
     </style>
 </head>
 <body>
@@ -191,6 +211,17 @@
             const itemsPerPage = 30;
             let allFolders = [];
             let isLoading = false;
+
+            // 初始化 LIFF
+            liff.init({
+                liffId: "1660786690-0XEXx5vG" // 請替換為您的 LIFF ID
+            }).then(() => {
+                if (!liff.isLoggedIn() && liff.isInClient()) {
+                    liff.login();
+                }
+            }).catch((err) => {
+                console.error('LIFF Initialization failed', err);
+            });
 
             function loadAlbums() {
                 showLoadingAnimation();
@@ -363,6 +394,17 @@
                     }
                 });
 
+                if (liff.isInClient()) {
+                    const lineButton = $('<button>')
+                        .addClass('line-button')
+                        .text('透過Line取得照片')
+                        .on('click', function() {
+                            const currentPhoto = photos[swiper.activeIndex];
+                            sendImageToLine(currentPhoto);
+                        });
+                    overlay.append(lineButton);
+                }
+
                 $(document).on('keydown.fullscreen', function(e) {
                     if (e.key === 'Escape') {
                         closeFullscreen();
@@ -389,6 +431,22 @@
 
             function hideLoadingAnimation() {
                 $('#loading').hide();
+            }
+
+            function sendImageToLine(imageUrl) {
+                if (liff.isInClient()) {
+                    liff.sendMessages([
+                        {
+                            type: 'image',
+                            originalContentUrl: imageUrl,
+                            previewImageUrl: imageUrl
+                        }
+                    ]).then(() => {
+                        console.log('Image sent successfully');
+                    }).catch((error) => {
+                        console.error('Error sending image:', error);
+                    });
+                }
             }
 
             loadAlbums();
