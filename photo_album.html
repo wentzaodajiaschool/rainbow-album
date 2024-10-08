@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>文藻美語✨活動剪影</title>
+    <title>文藻美語 活動剪影</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Swiper/8.4.5/swiper-bundle.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Swiper/8.4.5/swiper-bundle.min.css">
@@ -263,6 +263,11 @@
             width: 100%;
             height: 100%;
         }
+
+        .swiper-zoom-container {
+            width: 100%;
+            height: 100%;
+        }
     </style>
 </head>
 
@@ -424,8 +429,10 @@
 
                 photos.forEach((photo, i) => {
                     const slide = $('<div>').addClass('swiper-slide');
-                    const img = $('<img>').attr('data-src', photo);
-                    slide.append(img);
+                    const zoomContainer = $('<div>').addClass('swiper-zoom-container');
+                    const img = $('<img>').attr('src', photo);
+                    zoomContainer.append(img);
+                    slide.append(zoomContainer);
                     swiperWrapper.append(slide);
                 });
 
@@ -445,57 +452,37 @@
                         nextEl: '.swiper-button-next',
                         prevEl: '.swiper-button-prev',
                     },
-                    lazy: {
-                        loadPrevNext: true,
-                        loadPrevNextAmount: 2,
-                    },
                     zoom: {
                         maxRatio: 3,
                         minRatio: 1
                     },
                     on: {
-                        init: function () {
-                            const activeSlide = this.slides[this.activeIndex];
-                            const img = activeSlide.querySelector('img');
-                            if (img.getAttribute('data-src') && !img.src) {
-                                img.src = img.getAttribute('data-src');
+                        touchStart: function (swiper, event) {
+                            if (swiper.zoom.scale === 1) {
+                                startY = event.touches[0].clientY;
+                                currentTranslate = 0;
+                                swiper.$el.css('transition', 'transform 0.3s');
                             }
                         },
-                        slideChange: function () {
-                            const activeIndex = this.activeIndex;
-                            this.slides.forEach((slide, i) => {
-                                const img = slide.querySelector('img');
-                                if (Math.abs(i - activeIndex) <= 2) {
-                                    if (img.getAttribute('data-src') && !img.src) {
-                                        img.src = img.getAttribute('data-src');
-                                    }
-                                } else if (Math.abs(i - activeIndex) > 2) {
-                                    if (img.src) {
-                                        img.removeAttribute('src');
-                                    }
-                                }
-                            });
-                        },
-                        touchStart: function (swiper, event) {
-                            startY = event.touches[0].clientY;
-                            currentTranslate = 0;
-                            swiper.$el.css('transition', 'transform 0.3s');
-                        },
                         touchMove: function (swiper, event) {
-                            const currentY = event.touches[0].clientY;
-                            const diffY = currentY - startY;
-                            if (Math.abs(diffY) > 5 && !swiper.zoom.scale) {
-                                currentTranslate = diffY * 0.5;
-                                swiper.$el.css('transform', `translate3d(0px, ${currentTranslate}px, 0px)`);
+                            if (swiper.zoom.scale === 1) {
+                                const currentY = event.touches[0].clientY;
+                                const diffY = currentY - startY;
+                                if (Math.abs(diffY) > 5) {
+                                    currentTranslate = diffY * 0.5;
+                                    swiper.$el.css('transform', `translate3d(0px, ${currentTranslate}px, 0px)`);
+                                }
                             }
                         },
                         touchEnd: function (swiper) {
-                            if (Math.abs(currentTranslate) > 100) {
-                                closeFullscreen();
-                            } else {
-                                swiper.$el.css('transform', '');
+                            if (swiper.zoom.scale === 1) {
+                                if (Math.abs(currentTranslate) > 100) {
+                                    closeFullscreen();
+                                } else {
+                                    swiper.$el.css('transform', '');
+                                }
+                                swiper.$el.css('transition', '');
                             }
-                            swiper.$el.css('transition', '');
                         }
                     }
                 });
@@ -519,29 +506,14 @@
                 });
 
                 overlay.on('click', function (e) {
-                    if ($(e.target).closest('.swiper-slide, .swiper-button-next, .swiper-button-prev, .line-button').length === 0) {
+                    if ($(e.target).closest('.swiper-zoom-container, .swiper-button-next, .swiper-button-prev, .line-button').length === 0) {
                         closeFullscreen();
                     }
                 });
 
                 $('.close-button').on('click', closeFullscreen);
-
-                // 禁止全局的雙指放大
-                document.addEventListener('touchmove', function(e) {
-                    if (e.touches.length > 1 && !$('.fullscreen-overlay').is(':visible')) {
-                        e.preventDefault();
-                    }
-                }, { passive: false });
             }
 
-            // 修改 preventZoom 函數
-            function preventZoom(e) {
-                if (e.touches && e.touches.length > 1) {
-                    e.preventDefault();
-                }
-            }
-
-            // 修改 closeFullscreen 函數
             function closeFullscreen() {
                 console.log('Closing fullscreen view');
                 const overlay = $('.fullscreen-overlay');
@@ -549,17 +521,29 @@
                 $('body').removeClass('no-scroll');
                 $(document).off('keydown.fullscreen');
 
-                // 移除縮放限制
-                document.removeEventListener('touchmove', preventZoom);
-                document.removeEventListener('wheel', preventZoom);
-
                 // 滾動到相應位置
                 if (swiper) {
                     const currentIndex = swiper.activeIndex;
-                    const $currentThumb = $('.photo-item').eq(currentIndex);
-                    if ($currentThumb.length) {
-                        const scrollTop = $currentThumb.offset().top - ($(window).height() / 2) + ($currentThumb.height() / 2);
-                        $('html, body').scrollTop(scrollTop);
+                    const $albums = $('.album');
+                    let totalPhotos = 0;
+                    let targetAlbum, targetPhotoIndex;
+
+                    $albums.each(function(albumIndex) {
+                        const photosInAlbum = $(this).find('.photo-item').length;
+                        if (totalPhotos + photosInAlbum > currentIndex) {
+                            targetAlbum = $(this);
+                            targetPhotoIndex = currentIndex - totalPhotos;
+                            return false;
+                        }
+                        totalPhotos += photosInAlbum;
+                    });
+
+                    if (targetAlbum) {
+                        const $targetPhoto = targetAlbum.find('.photo-item').eq(targetPhotoIndex);
+                        if ($targetPhoto.length) {
+                            const scrollTop = $targetPhoto.offset().top - ($(window).height() / 2) + ($targetPhoto.height() / 2);
+                            $('html, body').animate({scrollTop: scrollTop}, 300);
+                        }
                     }
                 }
             }
@@ -605,6 +589,13 @@
                     loadMoreAlbums();
                 }
             });
+
+            // 允許大圖縮放，但禁止整個頁面的縮放
+            document.addEventListener('touchmove', function(e) {
+                if (e.touches.length > 1 && !$('.fullscreen-overlay').is(':visible')) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
         });
     </script>
 </body>
