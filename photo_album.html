@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>文藻美語✨活動剪影</title>
+    <title>文藻美語 活動剪影</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Swiper/8.4.5/swiper-bundle.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Swiper/8.4.5/swiper-bundle.min.css">
@@ -378,9 +378,8 @@
                             const img = $('<img>')
                                 .attr('data-src', photo + '=s300-c')
                                 .attr('data-full', photo)
-                                .attr('id', `photo-${startIndex + photoIndex}`) // 添加唯一的 ID
                                 .on('click', function () {
-                                    openFullscreen(folder.photos, photoIndex, startIndex);
+                                    openFullscreen(folder.photos, photoIndex);
                                 });
                             photoItem.append(img);
                             photoGrid.append(photoItem);
@@ -423,7 +422,7 @@
                 return match ? new Date(match[0]) : new Date(0);
             }
 
-            function openFullscreen(photos, index, startIndex) {
+            function openFullscreen(photos, index) {
                 const overlay = $('.fullscreen-overlay');
                 const swiperWrapper = overlay.find('.swiper-wrapper');
                 swiperWrapper.empty();
@@ -488,9 +487,6 @@
                     }
                 });
 
-                // 存储 startIndex
-                swiper.startIndex = startIndex;
-
                 if (liff.isInClient()) {
                     const lineButton = $('<button>')
                         .addClass('line-button')
@@ -525,17 +521,7 @@
                 $('body').removeClass('no-scroll');
                 $(document).off('keydown.fullscreen');
 
-                // 滾動到相應位置
-                if (swiper) {
-                    const currentIndex = swiper.activeIndex + swiper.startIndex;
-                    const targetPhotoId = `#photo-${currentIndex}`;
-                    const $targetPhoto = $(targetPhotoId);
-                    
-                    if ($targetPhoto.length) {
-                        const scrollTop = $targetPhoto.offset().top - ($(window).height() / 2) + ($targetPhoto.height() / 2);
-                        $('html, body').animate({scrollTop: scrollTop}, 300);
-                    }
-                }
+                // 移除了滾動到相應位置的代碼
             }
 
             function showLoadingAnimation() {
