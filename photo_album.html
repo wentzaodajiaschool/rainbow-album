@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>文藻美語✨活動剪影</title>
+    <title>文藻美語 活動剪影</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Swiper/8.4.5/swiper-bundle.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Swiper/8.4.5/swiper-bundle.min.css">
@@ -259,9 +259,9 @@
 
         .no-scroll {
             overflow: hidden;
-            position: fixed;
-            width: 100%;
-            height: 100%;
+            /* 移除 position: fixed; */
+            /* 移除 width: 100%; */
+            /* 移除 height: 100%; */
         }
 
         .swiper-zoom-container {
@@ -294,6 +294,7 @@
             const itemsPerPage = 30;
             let allFolders = [];
             let isLoading = false;
+            let scrollPosition;
 
             // 初始化 LIFF
             liff.init({
@@ -423,6 +424,9 @@
             }
 
             function openFullscreen(photos, index) {
+                scrollPosition = window.pageYOffset;
+                $('body').addClass('no-scroll').css('top', `-${scrollPosition}px`);
+
                 const overlay = $('.fullscreen-overlay');
                 const swiperWrapper = overlay.find('.swiper-wrapper');
                 swiperWrapper.empty();
@@ -518,7 +522,8 @@
                 console.log('Closing fullscreen view');
                 const overlay = $('.fullscreen-overlay');
                 overlay.hide();
-                $('body').removeClass('no-scroll');
+                $('body').removeClass('no-scroll').css('top', '');
+                window.scrollTo(0, scrollPosition);
                 $(document).off('keydown.fullscreen');
             }
 
