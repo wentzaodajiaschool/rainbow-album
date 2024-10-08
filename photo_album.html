@@ -3,8 +3,8 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>文藻美語🎆活動剪影</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>文藻美語✨活動剪影</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Swiper/8.4.5/swiper-bundle.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Swiper/8.4.5/swiper-bundle.min.css">
@@ -449,6 +449,10 @@
                         loadPrevNext: true,
                         loadPrevNextAmount: 2,
                     },
+                    zoom: {
+                        maxRatio: 3,
+                        minRatio: 1
+                    },
                     on: {
                         init: function () {
                             const activeSlide = this.slides[this.activeIndex];
@@ -475,12 +479,13 @@
                         touchStart: function (swiper, event) {
                             startY = event.touches[0].clientY;
                             currentTranslate = 0;
+                            swiper.$el.css('transition', 'transform 0.3s');
                         },
                         touchMove: function (swiper, event) {
                             const currentY = event.touches[0].clientY;
                             const diffY = currentY - startY;
-                            if (diffY > 0 && swiper.isBeginning || diffY < 0 && swiper.isEnd) {
-                                currentTranslate = diffY * 0.3;
+                            if (Math.abs(diffY) > 5 && !swiper.zoom.scale) {
+                                currentTranslate = diffY * 0.5;
                                 swiper.$el.css('transform', `translate3d(0px, ${currentTranslate}px, 0px)`);
                             }
                         },
@@ -490,6 +495,7 @@
                             } else {
                                 swiper.$el.css('transform', '');
                             }
+                            swiper.$el.css('transition', '');
                         }
                     }
                 });
@@ -520,16 +526,17 @@
 
                 $('.close-button').on('click', closeFullscreen);
 
-                // 禁用縮放
-                document.addEventListener('touchmove', preventZoom, { passive: false });
-                document.addEventListener('wheel', preventZoom, { passive: false });
+                // 禁止全局的雙指放大
+                document.addEventListener('touchmove', function(e) {
+                    if (e.touches.length > 1 && !$('.fullscreen-overlay').is(':visible')) {
+                        e.preventDefault();
+                    }
+                }, { passive: false });
             }
 
-            // 添加 preventZoom 函數
+            // 修改 preventZoom 函數
             function preventZoom(e) {
                 if (e.touches && e.touches.length > 1) {
-                    e.preventDefault();
-                } else if (e.ctrlKey && (e.deltaY < 0 || e.deltaY > 0)) {
                     e.preventDefault();
                 }
             }
@@ -551,9 +558,8 @@
                     const currentIndex = swiper.activeIndex;
                     const $currentThumb = $('.photo-item').eq(currentIndex);
                     if ($currentThumb.length) {
-                        $('html, body').animate({
-                            scrollTop: $currentThumb.offset().top - ($(window).height() / 2) + ($currentThumb.height() / 2)
-                        }, 500);
+                        const scrollTop = $currentThumb.offset().top - ($(window).height() / 2) + ($currentThumb.height() / 2);
+                        $('html, body').scrollTop(scrollTop);
                     }
                 }
             }
