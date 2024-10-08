@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>文藻美語-活動剪影</title>
+    <title>文藻美語✨活動剪影</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Swiper/8.4.5/swiper-bundle.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Swiper/8.4.5/swiper-bundle.min.css">
@@ -469,7 +469,8 @@
                     const lineButton = $('<button>')
                         .addClass('line-button')
                         .text('透過Line取得照片')
-                        .on('click', function () {
+                        .on('click', function (e) {
+                            e.stopPropagation(); // 阻止事件冒泡
                             const currentPhoto = photos[swiper.activeIndex];
                             sendImageToLine(currentPhoto);
                         });
@@ -483,7 +484,7 @@
                 });
 
                 overlay.on('click', function (e) {
-                    if ($(e.target).closest('.swiper-slide, .swiper-button-next, .swiper-button-prev').length === 0) {
+                    if ($(e.target).closest('.swiper-slide, .swiper-button-next, .swiper-button-prev, .line-button').length === 0) {
                         closeFullscreen();
                     }
                 });
