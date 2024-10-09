@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>文藻美語 活動剪影</title>
+    <title>文藻美語✨活動剪影</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Swiper/8.4.5/swiper-bundle.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Swiper/8.4.5/swiper-bundle.min.css">
@@ -281,25 +281,22 @@
 
         .line-button,
         .share-button {
-            padding: 10px 20px;
-            background-color: transparent;
+            padding: 10px 15px;
+            background-color: rgba(0, 0, 0, 0.5);
             color: white;
-            border: 2px solid white;
+            border: 1px solid white;
             border-radius: 5px;
             cursor: pointer;
-            font-size: 16px;
-        }
-
-        .share-button {
+            font-size: 14px;
+            white-space: nowrap;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 10px;
         }
 
         .share-button svg {
-            width: 24px;
-            height: 24px;
+            width: 20px;
+            height: 20px;
         }
 
         @media (min-width: 769px) {
@@ -546,7 +543,7 @@
                     const buttonContainer = $('<div>').addClass('button-container');
                     const lineButton = $('<button>')
                         .addClass('line-button')
-                        .text('透過Line取得照片')
+                        .text('取得照片')
                         .on('click', function (e) {
                             e.stopPropagation();
                             const currentPhoto = photos[swiper.activeIndex];
@@ -554,7 +551,7 @@
                         });
                     const shareButton = $('<button>')
                         .addClass('share-button')
-                        .html('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>')
+                        .html('<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>')
                         .on('click', function (e) {
                             e.stopPropagation();
                             const currentPhoto = photos[swiper.activeIndex];
@@ -638,8 +635,10 @@
                         }
                     }).catch((error) => {
                         console.error('Error sharing image:', error);
-                        showNotification('分享照片失敗');
+                        showNotification('分享照片失敗: ' + error.message);
                     });
+                } else {
+                    showNotification('此功能僅在 LINE 應用程式內可用');
                 }
             }
 
