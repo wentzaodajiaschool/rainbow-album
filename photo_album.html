@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>文藻美語✨活動剪影</title>
+    <title>文藻美語 活動剪影</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Swiper/8.4.5/swiper-bundle.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Swiper/8.4.5/swiper-bundle.min.css">
@@ -268,10 +268,17 @@
             left: 0;
             right: 0;
             z-index: 1002;
+            padding: 0 10px;
+        }
+
+        .button-row {
+            display: flex;
+            justify-content: space-between;
         }
 
         .line-button,
         .share-button {
+            flex: 1;
             padding: 10px 15px;
             background-color: rgba(0, 0, 0, 0.5);
             color: white;
@@ -283,12 +290,13 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 100%;
+            margin: 0 5px;
         }
 
         .share-button svg {
             width: 20px;
             height: 20px;
+            margin-right: 5px;
         }
 
         @media (min-width: 769px) {
@@ -310,23 +318,18 @@
             <div class="swiper-button-prev"></div>
         </div>
         <div class="button-container">
-            <div class="container">
-                <div class="row">
-                    <div class="col-6">
-                        <button class="line-button">取得照片</button>
-                    </div>
-                    <div class="col-6">
-                        <button class="share-button">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <circle cx="18" cy="5" r="3"></circle>
-                                <circle cx="6" cy="12" r="3"></circle>
-                                <circle cx="18" cy="19" r="3"></circle>
-                                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
-                                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
+            <div class="button-row">
+                <button class="line-button">取得照片</button>
+                <button class="share-button">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="18" cy="5" r="3"></circle>
+                        <circle cx="6" cy="12" r="3"></circle>
+                        <circle cx="18" cy="19" r="3"></circle>
+                        <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                        <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                    </svg>
+                    分享
+                </button>
             </div>
         </div>
     </div>
