@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>文藻美語 活動剪影</title>
+    <title>文藻美語✨活動剪影</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Swiper/8.4.5/swiper-bundle.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Swiper/8.4.5/swiper-bundle.min.css">
@@ -96,8 +96,8 @@
 
         .youtube-container {
             position: relative;
-            padding-bottom: 28.125%;
-            /* 16:9 寬高比的一半 */
+            padding-bottom: 28%;
+            /* 16:9 寬高比 */
             height: 0;
             overflow: hidden;
             max-width: 50%;
@@ -121,6 +121,15 @@
             .photo-grid {
                 grid-template-columns: repeat(3, 1fr);
                 gap: 5px;
+            }
+            .youtube-container {
+                position: relative;
+                padding-bottom: 52%; /* 16:9 寬高比 */
+                height: 0;
+                overflow: hidden;
+                max-width: 95%;
+                margin: 20px auto 30px;
+                border-radius: 10px;
             }
         }
 
@@ -348,10 +357,12 @@
 
             function loadAlbums() {
                 showLoadingAnimation();
-                fetch('https://script.google.com/macros/s/AKfycbx7gmCRh3kx_1X4n4ffNmj0TXZ0AhwKwIWhDp9ge6yojGKfogArrBxgUmKD01xR5iLV1A/exec')
+                fetch('https://rainbowstudent.wentzao.com/get_photo_data')
                     .then(response => response.json())
-                    .then(data => {
-                        console.log('Fetched data:', data); // 添加這行來記錄整個數據
+                    .then(responseData => {
+                        // 解析 data 字段中的 JSON 字符串
+                        const data = JSON.parse(responseData.data);
+                        console.log('Fetched data:', data); // 添加這行來記錄解析後的數據
                         allFolders = data.folders.sort((a, b) => {
                             let dateA = extractDate(a.folderName);
                             let dateB = extractDate(b.folderName);
