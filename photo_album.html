@@ -4,11 +4,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>文藻美語✨活動剪影</title>
+    <title>文藻美語 活動剪影</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Swiper/8.4.5/swiper-bundle.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Swiper/8.4.5/swiper-bundle.min.css">
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -118,25 +119,8 @@
 
         @media (max-width: 768px) {
             .photo-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            .swiper-button-next,
-            .swiper-button-prev {
-                display: none;
-            }
-
-            .youtube-container {
-                max-width: 90%;
-                padding-bottom: 56.25%;
-                /* 恢復到原來的 16:9 寬高比 */
-                margin-bottom: 20px;
-                /* 在小螢幕上減少底部 margin */
-            }
-
-            .photo-grid {
-                margin-top: 20px;
-                /* 在小螢幕上減少頂部 margin */
+                grid-template-columns: repeat(3, 1fr);
+                gap: 5px;
             }
         }
 
@@ -181,10 +165,10 @@
 
         .close-button {
             position: absolute;
-            top: 20px;
-            right: 20px;
+            top: 10px;
+            right: 10px;
             color: white;
-            font-size: 30px;
+            font-size: 40px;
             cursor: pointer;
             z-index: 1001;
         }
@@ -274,9 +258,6 @@
             bottom: 20px;
             left: 0;
             right: 0;
-            display: flex;
-            justify-content: center;
-            gap: 20px;
             z-index: 1002;
         }
 
@@ -293,8 +274,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            flex: 1;
-            max-width: 120px;
+            width: 100%;
         }
 
         .share-button svg {
@@ -321,7 +301,24 @@
             <div class="swiper-button-prev"></div>
         </div>
         <div class="button-container">
-            <!-- 這裡不需要預先定義按鈕，我們會在 JavaScript 中動態添加 -->
+            <div class="container">
+                <div class="row">
+                    <div class="col-6">
+                        <button class="line-button">取得照片</button>
+                    </div>
+                    <div class="col-6">
+                        <button class="share-button">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="18" cy="5" r="3"></circle>
+                                <circle cx="6" cy="12" r="3"></circle>
+                                <circle cx="18" cy="19" r="3"></circle>
+                                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -534,34 +531,24 @@
                 });
 
                 if (liff.isInClient()) {
-                    const buttonContainer = $('.button-container');
-                    
-                    // 使用 html 方法來替換整個按鈕容器的內容
-                    buttonContainer.html(`
-                        <button class="line-button">取得照片</button>
-                        <button class="share-button">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <circle cx="18" cy="5" r="3"></circle>
-                                <circle cx="6" cy="12" r="3"></circle>
-                                <circle cx="18" cy="19" r="3"></circle>
-                                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
-                                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
-                            </svg>
-                        </button>
-                    `);
+                    const lineButton = $('.line-button');
+                    const shareButton = $('.share-button');
 
-                    // 為按鈕添加點擊事件
-                    buttonContainer.find('.line-button').on('click', function (e) {
+                    lineButton.on('click', function (e) {
                         e.stopPropagation();
                         const currentPhoto = photos[swiper.activeIndex];
                         sendImageToLine(currentPhoto);
                     });
 
-                    buttonContainer.find('.share-button').on('click', function (e) {
+                    shareButton.on('click', function (e) {
                         e.stopPropagation();
                         const currentPhoto = photos[swiper.activeIndex];
                         shareImage(currentPhoto);
                     });
+
+                    $('.button-container').show();
+                } else {
+                    $('.button-container').hide();
                 }
 
                 $(document).on('keydown.fullscreen', function (e) {
