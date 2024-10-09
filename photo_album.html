@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>文藻美語✨活動剪影</title>
+    <title>文藻美語 活動剪影</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Swiper/8.4.5/swiper-bundle.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Swiper/8.4.5/swiper-bundle.min.css">
@@ -268,6 +268,45 @@
             width: 100%;
             height: 100%;
         }
+
+        .button-container {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 1002;
+        }
+
+        .line-button,
+        .share-button {
+            padding: 10px 20px;
+            background-color: transparent;
+            color: white;
+            border: 2px solid white;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .share-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+        }
+
+        .share-button svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        @media (min-width: 769px) {
+            .button-container {
+                display: none;
+            }
+        }
     </style>
 </head>
 
@@ -280,6 +319,18 @@
             <div class="swiper-wrapper"></div>
             <div class="swiper-button-next"></div>
             <div class="swiper-button-prev"></div>
+        </div>
+        <div class="button-container">
+            <button class="line-button">透過Line取得照片</button>
+            <button class="share-button">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="18" cy="5" r="3"></circle>
+                    <circle cx="6" cy="12" r="3"></circle>
+                    <circle cx="18" cy="19" r="3"></circle>
+                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                </svg>
+            </button>
         </div>
     </div>
 
@@ -492,6 +543,7 @@
                 });
 
                 if (liff.isInClient()) {
+                    const buttonContainer = $('<div>').addClass('button-container');
                     const lineButton = $('<button>')
                         .addClass('line-button')
                         .text('透過Line取得照片')
@@ -500,7 +552,16 @@
                             const currentPhoto = photos[swiper.activeIndex];
                             sendImageToLine(currentPhoto);
                         });
-                    overlay.append(lineButton);
+                    const shareButton = $('<button>')
+                        .addClass('share-button')
+                        .html('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>')
+                        .on('click', function (e) {
+                            e.stopPropagation();
+                            const currentPhoto = photos[swiper.activeIndex];
+                            shareImage(currentPhoto);
+                        });
+                    buttonContainer.append(lineButton, shareButton);
+                    overlay.append(buttonContainer);
                 }
 
                 $(document).on('keydown.fullscreen', function (e) {
@@ -559,6 +620,27 @@
                 setTimeout(() => {
                     notification.fadeOut(300);
                 }, 2000);
+            }
+
+            function shareImage(imageUrl) {
+                if (liff.isInClient()) {
+                    liff.shareTargetPicker([
+                        {
+                            type: 'image',
+                            originalContentUrl: imageUrl,
+                            previewImageUrl: imageUrl + '=s300-c'
+                        }
+                    ]).then((result) => {
+                        if (result) {
+                            showNotification('照片已成功分享');
+                        } else {
+                            showNotification('分享已取消');
+                        }
+                    }).catch((error) => {
+                        console.error('Error sharing image:', error);
+                        showNotification('分享照片失敗');
+                    });
+                }
             }
 
             loadAlbums();
