@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>文藻美語 活動剪影</title>
+    <title>✨活動剪影✨</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Swiper/8.4.5/swiper-bundle.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Swiper/8.4.5/swiper-bundle.min.css">
@@ -198,20 +198,7 @@
             }
         }
 
-        /* .line-button {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            padding: 10px 20px;
-            background-color: transparent;
-            color: white;
-            border: 2px solid white;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            z-index: 1002;
-        } */
+        
 
         @media (min-width: 769px) {
             .line-button {
@@ -295,6 +282,21 @@
             margin: 0 5px;
             max-width: calc(50% - 10px); /* 確保每個按鈕最多佔據一半寬度減去間距 */
         }
+
+        /* .line-button {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 10px 20px;
+            background-color: transparent;
+            color: white;
+            border: 2px solid white;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            z-index: 1002;
+        } */
 
         .share-button svg {
             width: 20px;
@@ -547,6 +549,9 @@
                     }
                 });
 
+                // 移除之前的事件監聽器
+                $('.line-button, .share-button').off('click');
+
                 if (liff.isInClient()) {
                     const lineButton = $('.line-button');
                     const shareButton = $('.share-button');
@@ -568,19 +573,19 @@
                     $('.button-container').hide();
                 }
 
-                $(document).on('keydown.fullscreen', function (e) {
+                $(document).off('keydown.fullscreen').on('keydown.fullscreen', function (e) {
                     if (e.key === 'Escape') {
                         closeFullscreen();
                     }
                 });
 
-                overlay.on('click', function (e) {
-                    if ($(e.target).closest('.swiper-zoom-container, .swiper-button-next, .swiper-button-prev, .line-button').length === 0) {
+                overlay.off('click').on('click', function (e) {
+                    if ($(e.target).closest('.swiper-zoom-container, .swiper-button-next, .swiper-button-prev, .line-button, .share-button').length === 0) {
                         closeFullscreen();
                     }
                 });
 
-                $('.close-button').on('click', closeFullscreen);
+                $('.close-button').off('click').on('click', closeFullscreen);
             }
 
             function closeFullscreen() {
@@ -636,8 +641,10 @@
                         }
                     ]).then((result) => {
                         if (result) {
+                            // 用戶完成了分享
                             showNotification('照片已成功分享');
                         } else {
+                            // 用戶沒有選擇分享目標
                             showNotification('分享已取消');
                         }
                     }).catch((error) => {
@@ -645,7 +652,28 @@
                         showNotification('分享照片失敗: ' + error.message);
                     });
                 } else {
-                    showNotification('此功能僅在 LINE 應用程式內可用');
+                    // 如果不在 LINE 應用程式內，提供替代方案
+                    if (navigator.share) {
+                        navigator.share({
+                            title: '分享照片',
+                            text: '查看這張照片',
+                            url: imageUrl
+                        }).then(() => {
+                            showNotification('照片已成功分享');
+                        }).catch((error) => {
+                            console.error('Error sharing via Web Share API:', error);
+                            showNotification('分享照片失敗');
+                        });
+                    } else {
+                        // 如果 Web Share API 不可用，可以提供一個簡單的替代方案
+                        const tempInput = document.createElement('input');
+                        document.body.appendChild(tempInput);
+                        tempInput.value = imageUrl;
+                        tempInput.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(tempInput);
+                        showNotification('照片連結已複製到剪貼簿');
+                    }
                 }
             }
 
