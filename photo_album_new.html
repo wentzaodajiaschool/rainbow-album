@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>🤩活動剪影🤩</title>
+    <title>文藻美語 活動剪影</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Swiper/8.4.5/swiper-bundle.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Swiper/8.4.5/swiper-bundle.min.css">
@@ -154,6 +154,12 @@
 
             .album {
                 padding: 0 5px;
+            }
+
+            .youtube-container {
+                max-width: calc(100% - 10px);
+                padding-bottom: 56.25%;
+                margin: 20px 5px;
             }
         }
 
@@ -562,7 +568,7 @@
                     if (navigator.share) {
                         navigator.share({
                             title: '分享照片',
-                            text: '查看這張照片',
+                            text: '查看這���照片',
                             url: imageUrl
                         })
                         .then(() => {
