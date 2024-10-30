@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>文藻美語 活動剪影</title>
+    <title>🌈活動剪影</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Swiper/8.4.5/swiper-bundle.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Swiper/8.4.5/swiper-bundle.min.css">
@@ -364,21 +364,14 @@
             // LIFF 初始化優化
             async function initializeLiff() {
                 try {
-                    // 添加 cookie 相關設定
-                    document.cookie = "SameSite=Strict; Secure";
-                    
                     await liff.init({ 
                         liffId,
-                        // 添加額外設定
-                        persistence: true,
-                        cookiePolicy: 'none' // 避免使用第三方 cookie
+                        logging: false,  // 關閉日誌
+                        persistence: false  // 關閉持久化
                     });
                     
                     if (!liff.isLoggedIn() && liff.isInClient()) {
-                        await liff.login({
-                            // 添加登入相關設定
-                            cookiePolicyUrl: 'https://www.wentzao.com/privacy-policy'
-                        });
+                        await liff.login();
                     }
                 } catch (error) {
                     console.error('LIFF Initialization failed:', error);
@@ -598,13 +591,6 @@
             // 事件監聽器綁定
             window.addEventListener('scroll', throttledScroll, { passive: true });
             window.addEventListener('resize', debouncedResize, { passive: true });
-            window.addEventListener('orientationchange', () => {
-                setTimeout(() => {
-                    document.getElementById('albums-container').innerHTML = '';
-                    state.currentPage = 1;
-                    loadAlbums();
-                }, 300);
-            });
 
             // 添加載入動畫相關函數
             function showLoadingAnimation() {
@@ -638,16 +624,15 @@
                     const currentY = event.touches[0].clientY;
                     const diffY = currentY - state.startY;
                     
-                    // 只有向下滑動時才有效果
                     if (diffY > 0) {
-                        event.preventDefault(); // 防止頁面滾動
+                        event.preventDefault();
                         state.currentTranslate = diffY * 0.5;
                         swiper.$el.css('transform', `translate3d(0px, ${state.currentTranslate}px, 0px)`);
                         
-                        // 顯示滑動距離
-                        console.log('滑動距離:', diffY, '實際位移:', state.currentTranslate);
+                        if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+                            console.log('滑動距離:', diffY, '實際位移:', state.currentTranslate);
+                        }
                         
-                        // 根據滑動距離調整背景透明度
                         const opacity = Math.max(0.9 - (diffY / 1000), 0.3);
                         document.querySelector('.fullscreen-overlay').style.backgroundColor = 
                             `rgba(0, 0, 0, ${opacity})`;
