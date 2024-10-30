@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>文藻美語 活動剪影</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Swiper/8.4.5/swiper-bundle.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Swiper/8.4.5/swiper-bundle.min.css">
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <style>
+        /* 基礎樣式 */
+        body {
+            margin: 0;
+            padding: 0;
+            background: #f5f5f5;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        /* 相簿容器 */
+        .album {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 10px;
+        }
+
+        .album-title {
+            font-size: 36px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+            padding: 0;
+        }
+
+        .album-date {
+            color: #92b7df;
+            margin-right: 10px;
+        }
+
+        /* 照片網格 */
+        .photo-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 10px;
+            padding: 0;
+            margin-top: 30px;
+        }
+
+        /* 照片項目 */
+        .photo-item {
+            position: relative;
+            padding-bottom: 100%;
+            background: #eee;
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .photo-item img {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .photo-item:hover img {
+            transform: scale(1.05);
+        }
+
+        /* 大尺寸照片 */
+        .photo-item.large {
+            grid-column: span 2;
+            grid-row: span 2;
+        }
+
+        /* YouTube 容器 */
+        .youtube-container {
+            position: relative;
+            padding-bottom: 28%;
+            height: 0;
+            overflow: hidden;
+            max-width: 50%;
+            margin: 20px auto;
+            border-radius: 10px;
+        }
+
+        .youtube-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* 全螢幕查看 */
+        .fullscreen-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+        }
+
+        .close-button {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            color: white;
+            font-size: 2rem;
+            cursor: pointer;
+            z-index: 1001;
+        }
+
+        /* Swiper 樣式 */
+        .swiper {
+            width: 100%;
+            height: 100%;
+        }
+
+        .swiper-slide {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .swiper-slide img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        /* 響應式設計 */
+        @media (max-width: 768px) {
+            .photo-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 5px;
+            }
+
+            .photo-item.large {
+                grid-column: span 2;
+                grid-row: span 2;
+            }
+
+            .album-title {
+                font-size: 24px;
+            }
+
+            .album {
+                padding: 0 5px;
+            }
+        }
+
+        /* 操作按鈕 */
+        .button-container {
+            position: fixed;
+            bottom: 1rem;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            padding: 0 1rem;
+            z-index: 1001;
+        }
+
+        .action-button {
+            padding: 0.8rem 1.5rem;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            backdrop-filter: blur(5px);
+        }
+
+        /* 載入動畫 */
+        .loading {
+            position: relative;
+        }
+
+        .loading::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+        }
+
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* 載入動畫樣式 */
+        #loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+        }
+
+        /* 自定義通知樣式 */
+        .custom-notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgb(15, 219, 96);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            z-index: 9999;
+            display: none;
+        }
+
+        /* 分享按鈕樣式 */
+        .share-button svg {
+            width: 20px;
+            height: 20px;
+            margin-right: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="albums-container"></div>
+
+    <div class="fullscreen-overlay">
+        <div class="close-button">&times;</div>
+        <div class="swiper">
+            <div class="swiper-wrapper"></div>
+            <div class="swiper-button-next"></div>
+            <div class="swiper-button-prev"></div>
+        </div>
+        <div class="button-container">
+            <button class="action-button line-button">取得照片</button>
+            <button class="action-button share-button">分享照片</button>
+        </div>
+    </div>
+
+    <div id="loading">載入中...</div>
+    <div class="custom-notification"></div>
+
+    <script>
+        $(document).ready(function() {
+            let swiper;
+            let currentPage = 1;
+            const itemsPerPage = 20;
+            let allFolders = [];
+            let isLoading = false;
+
+            // LIFF 初始化
+            liff.init({ liffId: "1660786690-0XEXx5vG" })
+                .then(() => {
+                    if (!liff.isLoggedIn() && liff.isInClient()) {
+                        liff.login();
+                    }
+                })
+                .catch(console.error);
+
+            function loadAlbums() {
+                if (isLoading) return;
+                isLoading = true;
+
+                fetch('https://rainbowstudent.wentzao.com/get_photo_data')
+                    .then(response => response.json())
+                    .then(responseData => {
+                        const data = JSON.parse(responseData.data);
+                        allFolders = data.folders.sort((a, b) => {
+                            return new Date(b.folderName.split('-')[0]) - new Date(a.folderName.split('-')[0]);
+                        });
+                        displayAlbums();
+                    })
+                    .catch(console.error)
+                    .finally(() => {
+                        isLoading = false;
+                    });
+            }
+
+            function displayAlbums() {
+                const container = $('#albums-container');
+                const startIndex = (currentPage - 1) * itemsPerPage;
+                const endIndex = startIndex + itemsPerPage;
+                
+                allFolders.slice(startIndex, endIndex).forEach(folder => {
+                    const albumElement = createAlbumElement(folder);
+                    container.append(albumElement);
+                });
+
+                lazyLoadImages();
+                currentPage++;
+            }
+
+            function createAlbumElement(folder) {
+                const album = $('<div>').addClass('album');
+                const titleParts = folder.folderName.split('-');
+                const date = titleParts.shift();
+                const title = titleParts.join(' ');
+
+                album.append(`
+                    <div class="album-title">
+                        <span class="album-date">${date}</span>
+                        ${title}
+                    </div>
+                `);
+
+                if (folder.youtube) {
+                    album.append(`
+                        <div class="youtube-container">
+                            <iframe src="https://www.youtube.com/embed/${folder.youtube}" 
+                                    allowfullscreen></iframe>
+                        </div>
+                    `);
+                }
+
+                if (folder.photos && folder.photos.length > 0) {
+                    const photoGrid = $('<div>').addClass('photo-grid');
+                    const isMobile = window.matchMedia('(max-width: 768px)').matches;
+
+                    if (isMobile) {
+                        // 每6張照片作為一組
+                        for (let i = 0; i < folder.photos.length; i += 6) {
+                            const groupPhotos = folder.photos.slice(i, i + 6);
+                            if (groupPhotos.length >= 4) { // 確保有足夠的照片形成一個完整組
+                                // 只從1、2、4、5位置中隨機選擇一個作為大圖
+                                const validPositions = [1, 2, 4, 5];
+                                const randomPosition = validPositions[Math.floor(Math.random() * validPositions.length)];
+                                const largePhotoIndex = i + (randomPosition - 1); // 因為索引從0開始，所以要減1
+                                
+                                // 添加這組的照片到網格
+                                groupPhotos.forEach((photo, groupIndex) => {
+                                    const photoItem = $('<div>').addClass('photo-item');
+                                    
+                                    if (i + groupIndex === largePhotoIndex) {
+                                        // 這是被選中的大圖
+                                        photoItem.addClass('large');
+                                    }
+
+                                    const img = $('<img>')
+                                        .attr('data-src', photo + '=s400-c')
+                                        .attr('data-full', photo)
+                                        .on('click', () => openFullscreen(folder.photos, i + groupIndex));
+
+                                    photoItem.append(img);
+                                    photoGrid.append(photoItem);
+                                });
+                            } else {
+                                // 處理剩餘的照片（少於6張的情況）
+                                groupPhotos.forEach((photo, groupIndex) => {
+                                    const photoItem = $('<div>').addClass('photo-item');
+                                    const img = $('<img>')
+                                        .attr('data-src', photo + '=s400-c')
+                                        .attr('data-full', photo)
+                                        .on('click', () => openFullscreen(folder.photos, i + groupIndex));
+
+                                    photoItem.append(img);
+                                    photoGrid.append(photoItem);
+                                });
+                            }
+                        }
+                    } else {
+                        // 桌面版的原有邏輯
+                        folder.photos.forEach((photo, index) => {
+                            const photoItem = $('<div>').addClass('photo-item');
+                            if (index % 5 === 0) {
+                                photoItem.addClass('large');
+                            }
+
+                            const img = $('<img>')
+                                .attr('data-src', photo + '=s400-c')
+                                .attr('data-full', photo)
+                                .on('click', () => openFullscreen(folder.photos, index));
+
+                            photoItem.append(img);
+                            photoGrid.append(photoItem);
+                        });
+                    }
+
+                    album.append(photoGrid);
+                }
+
+                return album;
+            }
+
+            function lazyLoadImages() {
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            const img = entry.target;
+                            img.src = img.dataset.src;
+                            img.onload = () => img.parentElement.classList.remove('loading');
+                            observer.unobserve(img);
+                        }
+                    });
+                });
+
+                $('img[data-src]').each(function() {
+                    $(this).parent().addClass('loading');
+                    observer.observe(this);
+                });
+            }
+
+            function openFullscreen(photos, index) {
+                scrollPosition = window.pageYOffset;
+                $('body').addClass('no-scroll').css('top', `-${scrollPosition}px`);
+
+                const overlay = $('.fullscreen-overlay');
+                const swiperWrapper = overlay.find('.swiper-wrapper');
+                swiperWrapper.empty();
+
+                photos.forEach(photo => {
+                    swiperWrapper.append(`
+                        <div class="swiper-slide">
+                            <div class="swiper-zoom-container">
+                                <img src="${photo}" />
+                            </div>
+                        </div>
+                    `);
+                });
+
+                overlay.show();
+                $('body').css('overflow', 'hidden');
+
+                if (swiper) swiper.destroy();
+
+                let startY;
+                let currentTranslate = 0;
+
+                swiper = new Swiper('.swiper', {
+                    initialSlide: index,
+                    zoom: { maxRatio: 3 },
+                    navigation: {
+                        nextEl: '.swiper-button-next',
+                        prevEl: '.swiper-button-prev',
+                    },
+                    on: {
+                        touchStart: function(swiper, event) {
+                            if (swiper.zoom.scale === 1) {
+                                startY = event.touches[0].clientY;
+                                currentTranslate = 0;
+                                swiper.$el.css('transition', 'transform 0.3s');
+                            }
+                        },
+                        touchMove: function(swiper, event) {
+                            if (swiper.zoom.scale === 1) {
+                                const currentY = event.touches[0].clientY;
+                                const diffY = currentY - startY;
+                                if (Math.abs(diffY) > 5) {
+                                    currentTranslate = diffY * 0.5;
+                                    swiper.$el.css('transform', `translate3d(0px, ${currentTranslate}px, 0px)`);
+                                }
+                            }
+                        },
+                        touchEnd: function(swiper) {
+                            if (swiper.zoom.scale === 1) {
+                                if (Math.abs(currentTranslate) > 100) {
+                                    closeFullscreen();
+                                } else {
+                                    swiper.$el.css('transform', '');
+                                }
+                                swiper.$el.css('transition', '');
+                            }
+                        }
+                    }
+                });
+
+                setupFullscreenButtons(photos);
+            }
+
+            function setupFullscreenButtons(photos) {
+                if (liff.isInClient()) {
+                    $('.button-container').show();
+                    
+                    $('.line-button').off().on('click', () => {
+                        const currentPhoto = photos[swiper.activeIndex];
+                        sendImageToLine(currentPhoto);
+                    });
+
+                    $('.share-button').off().on('click', () => {
+                        const currentPhoto = photos[swiper.activeIndex];
+                        shareImage(currentPhoto);
+                    });
+                } else {
+                    $('.button-container').hide();
+                }
+            }
+
+            function closeFullscreen() {
+                $('.fullscreen-overlay').hide();
+                $('body').css('overflow', '');
+            }
+
+            function showLoadingAnimation() {
+                $('#loading').show();
+            }
+
+            function hideLoadingAnimation() {
+                $('#loading').hide();
+            }
+
+            function showNotification(message) {
+                const notification = $('.custom-notification');
+                notification.text(message).fadeIn(300);
+                setTimeout(() => {
+                    notification.fadeOut(300);
+                }, 2000);
+            }
+
+            function sendImageToLine(imageUrl) {
+                if (liff.isInClient()) {
+                    liff.sendMessages([{
+                        type: 'image',
+                        originalContentUrl: imageUrl,
+                        previewImageUrl: imageUrl + '=s300-c'
+                    }])
+                    .then(() => {
+                        showNotification('照片已傳送到聊天室');
+                        console.log('Image sent successfully');
+                    })
+                    .catch((error) => {
+                        console.error('Error sending image:', error);
+                        showNotification('傳送照片失敗');
+                    });
+                }
+            }
+
+            function shareImage(imageUrl) {
+                if (liff.isInClient()) {
+                    liff.shareTargetPicker([{
+                        type: 'image',
+                        originalContentUrl: imageUrl,
+                        previewImageUrl: imageUrl + '=s300-c'
+                    }])
+                    .then((result) => {
+                        if (result) {
+                            showNotification('照片已成功分享');
+                        } else {
+                            showNotification('分享已取消');
+                        }
+                    })
+                    .catch((error) => {
+                        console.error('Error sharing image:', error);
+                        showNotification('分享照片失敗: ' + error.message);
+                    });
+                } else {
+                    if (navigator.share) {
+                        navigator.share({
+                            title: '分享照片',
+                            text: '查看這張照片',
+                            url: imageUrl
+                        })
+                        .then(() => {
+                            showNotification('照片已成功分享');
+                        })
+                        .catch((error) => {
+                            console.error('Error sharing via Web Share API:', error);
+                            showNotification('分享照片失敗');
+                        });
+                    } else {
+                        const tempInput = document.createElement('input');
+                        document.body.appendChild(tempInput);
+                        tempInput.value = imageUrl;
+                        tempInput.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(tempInput);
+                        showNotification('照片連結已複製到剪貼簿');
+                    }
+                }
+            }
+
+            // 禁止整個頁面的縮放，但允許大圖縮放
+            document.addEventListener('touchmove', function(e) {
+                if (e.touches.length > 1 && !$('.fullscreen-overlay').is(':visible')) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
+
+            // 初始加載
+            loadAlbums();
+
+            // 無限滾動
+            $(window).on('scroll', () => {
+                if ($(window).scrollTop() + $(window).height() > $(document).height() - 100) {
+                    loadAlbums();
+                }
+            });
+
+            // 關閉按鈕事件
+            $('.close-button').on('click', closeFullscreen);
+
+            // 修改 resize 事件處理，避免不必要的重新加載
+            let resizeTimeout;
+            let previousWidth = window.innerWidth;
+            
+            $(window).on('resize', function() {
+                clearTimeout(resizeTimeout);
+                resizeTimeout = setTimeout(function() {
+                    const currentWidth = window.innerWidth;
+                    const breakpoint = 768;
+                    
+                    // 只有在跨越斷點時才重新加載
+                    if ((previousWidth <= breakpoint && currentWidth > breakpoint) ||
+                        (previousWidth > breakpoint && currentWidth <= breakpoint)) {
+                        $('#albums-container').empty();
+                        currentPage = 1;
+                        loadAlbums();
+                    }
+                    
+                    previousWidth = currentWidth;
+                }, 250);
+            });
+
+            // 添加 orientationchange 事件處理
+            window.addEventListener('orientationchange', function() {
+                // 等待方向變更完成後再重新加載
+                setTimeout(function() {
+                    $('#albums-container').empty();
+                    currentPage = 1;
+                    loadAlbums();
+                }, 300);
+            });
+        });
+    </script>
+</body>
+
+</html>
