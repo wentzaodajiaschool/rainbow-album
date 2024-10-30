@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>文藻美語 活動剪影</title>
+    <title>🤩活動剪影🤩</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Swiper/8.4.5/swiper-bundle.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Swiper/8.4.5/swiper-bundle.min.css">
@@ -266,7 +266,7 @@
             let isLoading = false;
 
             // LIFF 初始化
-            liff.init({ liffId: "1660786690-0XEXx5vG" })
+            liff.init({ liffId: "1660786690-PdnDvrOQ" })
                 .then(() => {
                     if (!liff.isLoggedIn() && liff.isInClient()) {
                         liff.login();
