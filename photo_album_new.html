@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>文藻美語 活動剪影</title>
+    <title>🍁活動剪影</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Swiper/8.4.5/swiper-bundle.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Swiper/8.4.5/swiper-bundle.min.css">
@@ -363,6 +363,37 @@
                 currentTranslate: 0
             };
 
+            // 添加記憶體管理
+            const memoryManager = {
+                // 儲存已載入的 YouTube iframe
+                loadedIframes: new Set(),
+                
+                // 儲存已載入的圖片
+                loadedImages: new WeakMap(),
+                
+                // 清理不在視圖中的資源
+                cleanup: function() {
+                    this.cleanupIframes();
+                    this.cleanupImages();
+                },
+                
+                // 清理不在視圖中的 YouTube iframe
+                cleanupIframes: function() {
+                    this.loadedIframes.forEach(iframe => {
+                        if (!isElementInViewport(iframe)) {
+                            iframe.src = 'about:blank';
+                            this.loadedIframes.delete(iframe);
+                        }
+                    });
+                },
+                
+                // 清理不在視圖中的圖片
+                cleanupImages: function() {
+                    // 使用 WeakMap 自動處理垃圾回收
+                    // 不需要手動清理
+                }
+            };
+
             // LIFF 初始化優化
             async function initializeLiff() {
                 try {
@@ -390,17 +421,26 @@
                     entries.forEach(entry => {
                         if (entry.isIntersecting) {
                             const img = entry.target;
-                            // 使用較小的圖片尺寸
-                            img.src = img.dataset.src;
+                            const smallSrc = img.dataset.src;
+                            
+                            // 先載入小圖
+                            img.src = smallSrc;
                             img.onload = () => {
                                 img.parentElement.classList.remove('loading');
-                                // 加載完成後取消觀察
-                                observer.unobserve(img);
+                                
+                                // 延遲載入原圖
+                                if (img.dataset.full) {
+                                    const fullImg = new Image();
+                                    fullImg.src = img.dataset.full;
+                                    memoryManager.loadedImages.set(img, fullImg);
+                                }
                             };
+                            
+                            observer.unobserve(img);
                         }
                     });
                 }, {
-                    rootMargin: '50px 0px', // 預加載範圍
+                    rootMargin: '50px 0px',
                     threshold: 0.1
                 });
 
@@ -775,15 +815,30 @@
                 titleDiv.appendChild(document.createTextNode(' ' + title));
                 albumDiv.appendChild(titleDiv);
 
-                // 添加 YouTube 影片（如果有）
+                // 修改 YouTube 容器的創建方式
                 if (folder.youtube) {
                     const youtubeContainer = document.createElement('div');
                     youtubeContainer.className = 'youtube-container';
-                    youtubeContainer.innerHTML = `
-                        <iframe src="https://www.youtube.com/embed/${folder.youtube}"
-                                frameborder="0"
-                                allowfullscreen></iframe>
-                    `;
+                    
+                    // 使用佔位圖片
+                    const placeholder = document.createElement('div');
+                    placeholder.className = 'youtube-placeholder';
+                    placeholder.setAttribute('data-youtube-id', folder.youtube);
+                    
+                    // 只有當容器進入視圖時才載入 iframe
+                    const observer = new IntersectionObserver((entries) => {
+                        entries.forEach(entry => {
+                            if (entry.isIntersecting) {
+                                loadYouTubeIframe(placeholder, folder.youtube);
+                                observer.disconnect();
+                            }
+                        });
+                    }, {
+                        threshold: 0.1
+                    });
+
+                    youtubeContainer.appendChild(placeholder);
+                    observer.observe(placeholder);
                     albumDiv.appendChild(youtubeContainer);
                 }
 
@@ -845,6 +900,41 @@
 
                 return albumDiv;
             }
+
+            // 添加 YouTube iframe 載入函數
+            function loadYouTubeIframe(placeholder, youtubeId) {
+                const iframe = document.createElement('iframe');
+                iframe.src = `https://www.youtube.com/embed/${youtubeId}`;
+                iframe.setAttribute('frameborder', '0');
+                iframe.setAttribute('allowfullscreen', '');
+                iframe.setAttribute('loading', 'lazy');
+                
+                placeholder.parentNode.replaceChild(iframe, placeholder);
+                memoryManager.loadedIframes.add(iframe);
+            }
+
+            // 檢查元素是否在視圖中
+            function isElementInViewport(el) {
+                const rect = el.getBoundingClientRect();
+                return (
+                    rect.top >= 0 &&
+                    rect.left >= 0 &&
+                    rect.bottom <= window.innerHeight &&
+                    rect.right <= window.innerWidth
+                );
+            }
+
+            // 定期執行記憶體清理
+            setInterval(() => {
+                memoryManager.cleanup();
+            }, 30000); // 每30秒執行一次
+
+            // 在滾動時也觸發清理
+            const debouncedCleanup = debounce(() => {
+                memoryManager.cleanup();
+            }, 1000);
+
+            window.addEventListener('scroll', debouncedCleanup, { passive: true });
 
             // 初始化
             initializeLiff();
