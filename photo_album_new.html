@@ -4,11 +4,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>🌈活動剪影</title>
+    <title>文藻美語 活動剪影</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Swiper/8.4.5/swiper-bundle.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Swiper/8.4.5/swiper-bundle.min.css">
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <meta name="referrer" content="no-referrer">
+    <meta name="google" content="notranslate">
     <style>
         /* 基礎樣式 */
         body {
@@ -367,11 +369,15 @@
                     await liff.init({ 
                         liffId,
                         logging: false,  // 關閉日誌
-                        persistence: false  // 關閉持久化
+                        persistence: false,  // 關閉持久化
+                        analytics: false // 關閉分析
                     });
                     
                     if (!liff.isLoggedIn() && liff.isInClient()) {
-                        await liff.login();
+                        await liff.login({
+                            redirectUri: window.location.href,
+                            analytics: false // 關閉登入分析
+                        });
                     }
                 } catch (error) {
                     console.error('LIFF Initialization failed:', error);
