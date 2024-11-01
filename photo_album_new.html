@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>活動剪影🍁</title>
+    <title>🍁活動剪影🍁</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Swiper/8.4.5/swiper-bundle.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Swiper/8.4.5/swiper-bundle.min.css">
@@ -329,11 +329,14 @@
                 const startIndex = (currentPage - 1) * itemsPerPage;
                 const endIndex = startIndex + itemsPerPage;
                 
+                const fragment = document.createDocumentFragment();
+                
                 allFolders.slice(startIndex, endIndex).forEach(folder => {
                     const albumElement = createAlbumElement(folder);
-                    container.append(albumElement);
+                    fragment.appendChild(albumElement[0]);
                 });
-
+                
+                container.append(fragment);
                 lazyLoadImages();
                 currentPage++;
             }
@@ -434,17 +437,58 @@
                     entries.forEach(entry => {
                         if (entry.isIntersecting) {
                             const img = entry.target;
-                            img.src = img.dataset.src;
-                            img.onload = () => img.parentElement.classList.remove('loading');
+                            if (!img.src) {  // 確保圖片還沒被載入過
+                                img.src = img.dataset.src;
+                                img.onload = () => {
+                                    img.parentElement.classList.remove('loading');
+                                    // 圖片載入完成後，移除 data-src 以釋放記憶體
+                                    img.removeAttribute('data-src');
+                                };
+                                img.onerror = () => {
+                                    // 如果載入失敗，移除觀察並標記錯誤
+                                    observer.unobserve(img);
+                                    img.parentElement.classList.remove('loading');
+                                    img.parentElement.classList.add('error');
+                                };
+                            }
                             observer.unobserve(img);
                         }
                     });
+                }, {
+                    rootMargin: '50px 0px',  // 提前 50px 開始載入
+                    threshold: 0.1
                 });
 
-                $('img[data-src]').each(function() {
+                // 只觀察還沒有 src 的圖片
+                $('img[data-src]:not([src])').each(function() {
                     $(this).parent().addClass('loading');
                     observer.observe(this);
                 });
+
+                // 定期清理不在視窗內的圖片
+                const cleanupImages = () => {
+                    $('img[src]').each(function() {
+                        const rect = this.getBoundingClientRect();
+                        const buffer = window.innerHeight * 2; // 保留視窗高度2倍範圍內的圖片
+                        
+                        if (rect.bottom < -buffer || rect.top > window.innerHeight + buffer) {
+                            // 將圖片 src 轉移回 data-src，並清空 src
+                            if (!this.dataset.src) {
+                                this.dataset.src = this.src;
+                            }
+                            this.src = '';
+                            this.parentElement.classList.add('loading');
+                        }
+                    });
+                };
+
+                // 每 30 秒清理一次，或在滾動停止後清理
+                let scrollTimeout;
+                $(window).on('scroll', () => {
+                    clearTimeout(scrollTimeout);
+                    scrollTimeout = setTimeout(cleanupImages, 1000);
+                });
+                setInterval(cleanupImages, 30000);
             }
 
             function openFullscreen(photos, index) {
@@ -455,11 +499,15 @@
                 const swiperWrapper = overlay.find('.swiper-wrapper');
                 swiperWrapper.empty();
 
-                photos.forEach(photo => {
+                // 初始只載入當前和前後各2張圖片
+                photos.forEach((photo, i) => {
+                    const shouldLoadImage = Math.abs(i - index) <= 2;
                     swiperWrapper.append(`
                         <div class="swiper-slide">
                             <div class="swiper-zoom-container">
-                                <img src="${photo}" />
+                                <img src="${shouldLoadImage ? photo : ''}" 
+                                     data-src="${photo}"
+                                     class="${shouldLoadImage ? 'swiper-lazy-loaded' : 'swiper-lazy'}" />
                             </div>
                         </div>
                     `);
@@ -480,7 +528,32 @@
                         nextEl: '.swiper-button-next',
                         prevEl: '.swiper-button-prev',
                     },
+                    preloadImages: false,
+                    lazy: {
+                        loadPrevNext: true,
+                        loadPrevNextAmount: 2,
+                    },
                     on: {
+                        slideChange: function() {
+                            // 當滑動到新的slide時，確保前後2張圖片都已載入
+                            const activeIndex = this.activeIndex;
+                            const slides = this.slides;
+                            
+                            if (!slides) return;  // 防止 undefined 錯誤
+
+                            for (let i = -2; i <= 2; i++) {
+                                const slideIndex = activeIndex + i;
+                                if (slideIndex >= 0 && slideIndex < slides.length) {
+                                    const slide = slides[slideIndex];
+                                    const img = slide.querySelector('img');
+                                    if (img && !img.src && img.dataset.src) {
+                                        img.src = img.dataset.src;
+                                        img.classList.remove('swiper-lazy');
+                                        img.classList.add('swiper-lazy-loaded');
+                                    }
+                                }
+                            }
+                        },
                         touchStart: function(swiper, event) {
                             if (swiper.zoom.scale === 1) {
                                 startY = event.touches[0].clientY;
@@ -535,6 +608,15 @@
             function closeFullscreen() {
                 $('.fullscreen-overlay').hide();
                 $('body').css('overflow', '');
+                
+                // 釋放 Swiper 實例
+                if (swiper) {
+                    swiper.destroy(true, true);
+                    swiper = null;
+                }
+                
+                // 清空 Swiper 容器
+                $('.swiper-wrapper').empty();
             }
 
             function showLoadingAnimation() {
@@ -635,7 +717,7 @@
             // 關閉按鈕事件
             $('.close-button').on('click', closeFullscreen);
 
-            // 修改 resize 事件處理，避免不必要的重新加載
+            // 修改 resize 事件處理
             let resizeTimeout;
             let previousWidth = window.innerWidth;
             
@@ -645,26 +727,33 @@
                     const currentWidth = window.innerWidth;
                     const breakpoint = 768;
                     
-                    // 只有在跨越斷點時才重新加載
-                    if ((previousWidth <= breakpoint && currentWidth > breakpoint) ||
-                        (previousWidth > breakpoint && currentWidth <= breakpoint)) {
+                    // 只在寬度變化超過 50px 且跨越斷點時才重新載入
+                    if (Math.abs(currentWidth - previousWidth) > 100 && 
+                        ((previousWidth <= breakpoint && currentWidth > breakpoint) ||
+                         (previousWidth > breakpoint && currentWidth <= breakpoint))) {
                         $('#albums-container').empty();
                         currentPage = 1;
                         loadAlbums();
                     }
                     
                     previousWidth = currentWidth;
-                }, 250);
+                }, 500); // 增加延遲時間到 500ms
             });
 
-            // 添加 orientationchange 事件處理
+            // 修改 orientationchange 事件處理
+            let orientationTimeout;
             window.addEventListener('orientationchange', function() {
-                // 等待方向變更完成後再重新加載
-                setTimeout(function() {
-                    $('#albums-container').empty();
-                    currentPage = 1;
-                    loadAlbums();
-                }, 300);
+                clearTimeout(orientationTimeout);
+                orientationTimeout = setTimeout(function() {
+                    // 只在實際方向改變時重新載入
+                    const currentWidth = window.innerWidth;
+                    if (Math.abs(currentWidth - previousWidth) > 200) {
+                        $('#albums-container').empty();
+                        currentPage = 1;
+                        loadAlbums();
+                        previousWidth = currentWidth;
+                    }
+                }, 500);
             });
         });
     </script>
