@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>🍁活動剪影🍁</title>
+    <title>🍁活動剪影</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Swiper/8.4.5/swiper-bundle.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Swiper/8.4.5/swiper-bundle.min.css">
@@ -437,15 +437,12 @@
                     entries.forEach(entry => {
                         if (entry.isIntersecting) {
                             const img = entry.target;
-                            if (!img.src) {  // 確保圖片還沒被載入過
+                            if (!img.src && img.dataset.src) {  // 確保圖片有 data-src 且還沒被載入
                                 img.src = img.dataset.src;
                                 img.onload = () => {
                                     img.parentElement.classList.remove('loading');
-                                    // 圖片載入完成後，移除 data-src 以釋放記憶體
-                                    img.removeAttribute('data-src');
                                 };
                                 img.onerror = () => {
-                                    // 如果載入失敗，移除觀察並標記錯誤
                                     observer.unobserve(img);
                                     img.parentElement.classList.remove('loading');
                                     img.parentElement.classList.add('error');
@@ -455,15 +452,22 @@
                         }
                     });
                 }, {
-                    rootMargin: '50px 0px',  // 提前 50px 開始載入
+                    rootMargin: '50px 0px',
                     threshold: 0.1
                 });
 
-                // 只觀察還沒有 src 的圖片
-                $('img[data-src]:not([src])').each(function() {
-                    $(this).parent().addClass('loading');
-                    observer.observe(this);
-                });
+                // 觀察所有需要延遲載入的圖片
+                function observeImages() {
+                    $('img[data-src]').each(function() {
+                        if (!this.src) {  // 只觀察還沒有 src 的圖片
+                            $(this).parent().addClass('loading');
+                            observer.observe(this);
+                        }
+                    });
+                }
+
+                // 初始觀察
+                observeImages();
 
                 // 定期清理不在視窗內的圖片
                 const cleanupImages = () => {
@@ -472,23 +476,30 @@
                         const buffer = window.innerHeight * 2; // 保留視窗高度2倍範圍內的圖片
                         
                         if (rect.bottom < -buffer || rect.top > window.innerHeight + buffer) {
-                            // 將圖片 src 轉移回 data-src，並清空 src
-                            if (!this.dataset.src) {
-                                this.dataset.src = this.src;
-                            }
+                            // 清空 src，但保留 data-src 以供之後重新載入
                             this.src = '';
                             this.parentElement.classList.add('loading');
+                            // 重新加入觀察名單
+                            observer.observe(this);
                         }
                     });
                 };
 
-                // 每 30 秒清理一次，或在滾動停止後清理
+                // 在滾動停止後清理，並重新觀察圖片
                 let scrollTimeout;
                 $(window).on('scroll', () => {
                     clearTimeout(scrollTimeout);
-                    scrollTimeout = setTimeout(cleanupImages, 1000);
+                    scrollTimeout = setTimeout(() => {
+                        cleanupImages();
+                        observeImages(); // 確保所有應該載入的圖片都被觀察到
+                    }, 1000);
                 });
-                setInterval(cleanupImages, 30000);
+
+                // 每 30 秒執行一次清理和重新觀察
+                setInterval(() => {
+                    cleanupImages();
+                    observeImages();
+                }, 30000);
             }
 
             function openFullscreen(photos, index) {
