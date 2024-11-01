@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>🍁活動剪影</title>
+    <title>文藻美語 活動剪影</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Swiper/8.4.5/swiper-bundle.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Swiper/8.4.5/swiper-bundle.min.css">
@@ -210,8 +210,13 @@
         }
 
         @keyframes loading {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
+            0% {
+                background-position: 200% 0;
+            }
+
+            100% {
+                background-position: -200% 0;
+            }
         }
 
         /* 載入動畫樣式 */
@@ -289,14 +294,29 @@
     <div class="custom-notification"></div>
 
     <script>
-        $(document).ready(function() {
-            let swiper;
-            let currentPage = 1;
-            const itemsPerPage = 20;
-            let allFolders = [];
-            let isLoading = false;
+        $(document).ready(function () {
+            /**
+             * 照片瀏覽器的主要JavaScript代碼
+             * 功能包括：
+             * 1. 相簿瀏覽和無限滾動載入
+             * 2. 照片延遲載入(Lazy Loading)
+             * 3. 全螢幕照片查看
+             * 4. LINE LIFF 整合（分享和傳送照片）
+             * 5. 響應式設計處理
+             */
 
-            // LIFF 初始化
+            // 全域變數設定
+            let swiper;                     // Swiper實例，用於全螢幕照片瀏覽
+            let currentPage = 1;            // 目前載入的頁碼
+            const itemsPerPage = 20;        // 每頁顯示的相簿數量
+            let allFolders = [];            // 儲存所有相簿資料
+            let isLoading = false;          // 防止重複載入的標記
+            let scrollPosition;             // 儲存滾動位置
+
+            /**
+             * LIFF初始化
+             * 用於LINE應用程式內的功能整合
+             */
             liff.init({ liffId: "1660786690-PdnDvrOQ" })
                 .then(() => {
                     if (!liff.isLoggedIn() && liff.isInClient()) {
@@ -305,6 +325,12 @@
                 })
                 .catch(console.error);
 
+            /**
+             * 載入相簿資料
+             * - 從伺服器獲取相簿資料
+             * - 依日期排序
+             * - 分頁顯示
+             */
             function loadAlbums() {
                 if (isLoading) return;
                 isLoading = true;
@@ -324,23 +350,33 @@
                     });
             }
 
+            /**
+             * 顯示相簿
+             * - 處理相簿的分頁顯示
+             * - 觸發延遲載入
+             */
             function displayAlbums() {
                 const container = $('#albums-container');
                 const startIndex = (currentPage - 1) * itemsPerPage;
                 const endIndex = startIndex + itemsPerPage;
-                
-                const fragment = document.createDocumentFragment();
-                
+
                 allFolders.slice(startIndex, endIndex).forEach(folder => {
                     const albumElement = createAlbumElement(folder);
-                    fragment.appendChild(albumElement[0]);
+                    container.append(albumElement);
                 });
-                
-                container.append(fragment);
+
                 lazyLoadImages();
                 currentPage++;
             }
 
+            /**
+             * 創建相簿元素
+             * @param {Object} folder - 相簿資料
+             * - 處理相簿標題和日期
+             * - 處理YouTube影片嵌入
+             * - 建立照片網格
+             * - 處理響應式布局（手機版和桌面版）
+             */
             function createAlbumElement(folder) {
                 const album = $('<div>').addClass('album');
                 const titleParts = folder.folderName.split('-');
@@ -357,7 +393,7 @@
                 if (folder.youtube) {
                     album.append(`
                         <div class="youtube-container">
-                            <iframe src="https://www.youtube.com/embed/${folder.youtube}" 
+                            <iframe src="https://www.youtube.com/embed/${folder.youtube}"
                                     allowfullscreen></iframe>
                         </div>
                     `);
@@ -376,11 +412,11 @@
                                 const validPositions = [1, 2, 4, 5];
                                 const randomPosition = validPositions[Math.floor(Math.random() * validPositions.length)];
                                 const largePhotoIndex = i + (randomPosition - 1); // 因為索引從0開始，所以要減1
-                                
+
                                 // 添加這組的照片到網格
                                 groupPhotos.forEach((photo, groupIndex) => {
                                     const photoItem = $('<div>').addClass('photo-item');
-                                    
+
                                     if (i + groupIndex === largePhotoIndex) {
                                         // 這是被選中的大圖
                                         photoItem.addClass('large');
@@ -432,76 +468,47 @@
                 return album;
             }
 
+            /**
+             * 照片延遲載入
+             * 使用 IntersectionObserver 實現圖片的動態載入和卸載
+             * 減少初始載入時的資源消耗
+             */
             function lazyLoadImages() {
                 const observer = new IntersectionObserver((entries) => {
                     entries.forEach(entry => {
+                        const img = entry.target;
                         if (entry.isIntersecting) {
-                            const img = entry.target;
-                            if (!img.src && img.dataset.src) {  // 確保圖片有 data-src 且還沒被載入
+                            // 圖片進入視窗，載入圖片
+                            if (!img.src) {
                                 img.src = img.dataset.src;
-                                img.onload = () => {
-                                    img.parentElement.classList.remove('loading');
-                                };
-                                img.onerror = () => {
-                                    observer.unobserve(img);
-                                    img.parentElement.classList.remove('loading');
-                                    img.parentElement.classList.add('error');
-                                };
+                                img.onload = () => img.parentElement.classList.remove('loading');
                             }
-                            observer.unobserve(img);
+                        } else {
+                            // 圖片離開視窗，卸載圖片
+                            if (img.src) {
+                                img.parentElement.classList.add('loading');
+                                img.src = '';
+                            }
                         }
                     });
                 }, {
-                    rootMargin: '50px 0px',
-                    threshold: 0.1
+                    rootMargin: '200px' // 提前載入/卸載圖片的距離
                 });
 
-                // 觀察所有需要延遲載入的圖片
-                function observeImages() {
-                    $('img[data-src]').each(function() {
-                        if (!this.src) {  // 只觀察還沒有 src 的圖片
-                            $(this).parent().addClass('loading');
-                            observer.observe(this);
-                        }
-                    });
-                }
-
-                // 初始觀察
-                observeImages();
-
-                // 定期清理不在視窗內的圖片
-                const cleanupImages = () => {
-                    $('img[src]').each(function() {
-                        const rect = this.getBoundingClientRect();
-                        const buffer = window.innerHeight * 2; // 保留視窗高度2倍範圍內的圖片
-                        
-                        if (rect.bottom < -buffer || rect.top > window.innerHeight + buffer) {
-                            // 清空 src，但保留 data-src 以供之後重新載入
-                            this.src = '';
-                            this.parentElement.classList.add('loading');
-                            // 重新加入觀察名單
-                            observer.observe(this);
-                        }
-                    });
-                };
-
-                // 在滾動停止後清理，並重新觀察圖片
-                let scrollTimeout;
-                $(window).on('scroll', () => {
-                    clearTimeout(scrollTimeout);
-                    scrollTimeout = setTimeout(() => {
-                        cleanupImages();
-                        observeImages(); // 確保所有應該載入的圖片都被觀察到
-                    }, 1000);
+                $('img[data-src]').each(function () {
+                    $(this).parent().addClass('loading');
+                    observer.observe(this);
                 });
-
-                // 每 30 秒執行一次清理和重新觀察
-                setInterval(() => {
-                    cleanupImages();
-                    observeImages();
-                }, 30000);
             }
 
+            /**
+             * 開啟全螢幕照片查看
+             * @param {Array} photos - 照片陣列
+             * @param {Number} index - 起始照片索引
+             * - 實現延遲載入大圖
+             * - 設定 Swiper 輪播
+             * - 處理手勢操作
+             */
             function openFullscreen(photos, index) {
                 scrollPosition = window.pageYOffset;
                 $('body').addClass('no-scroll').css('top', `-${scrollPosition}px`);
@@ -516,7 +523,7 @@
                     swiperWrapper.append(`
                         <div class="swiper-slide">
                             <div class="swiper-zoom-container">
-                                <img src="${shouldLoadImage ? photo : ''}" 
+                                <img src="${shouldLoadImage ? photo : ''}"
                                      data-src="${photo}"
                                      class="${shouldLoadImage ? 'swiper-lazy-loaded' : 'swiper-lazy'}" />
                             </div>
@@ -545,11 +552,11 @@
                         loadPrevNextAmount: 2,
                     },
                     on: {
-                        slideChange: function() {
+                        slideChange: function () {
                             // 當滑動到新的slide時，確保前後2張圖片都已載入
                             const activeIndex = this.activeIndex;
                             const slides = this.slides;
-                            
+
                             if (!slides) return;  // 防止 undefined 錯誤
 
                             for (let i = -2; i <= 2; i++) {
@@ -565,14 +572,14 @@
                                 }
                             }
                         },
-                        touchStart: function(swiper, event) {
+                        touchStart: function (swiper, event) {
                             if (swiper.zoom.scale === 1) {
                                 startY = event.touches[0].clientY;
                                 currentTranslate = 0;
                                 swiper.$el.css('transition', 'transform 0.3s');
                             }
                         },
-                        touchMove: function(swiper, event) {
+                        touchMove: function (swiper, event) {
                             if (swiper.zoom.scale === 1) {
                                 const currentY = event.touches[0].clientY;
                                 const diffY = currentY - startY;
@@ -582,7 +589,7 @@
                                 }
                             }
                         },
-                        touchEnd: function(swiper) {
+                        touchEnd: function (swiper) {
                             if (swiper.zoom.scale === 1) {
                                 if (Math.abs(currentTranslate) > 100) {
                                     closeFullscreen();
@@ -598,10 +605,16 @@
                 setupFullscreenButtons(photos);
             }
 
+            /**
+             * 設定全螢幕模式的按鈕
+             * @param {Array} photos - 照片陣列
+             * - 處理LINE內的照片傳送和分享功能
+             * - 處理網頁版的分享功能
+             */
             function setupFullscreenButtons(photos) {
                 if (liff.isInClient()) {
                     $('.button-container').show();
-                    
+
                     $('.line-button').off().on('click', () => {
                         const currentPhoto = photos[swiper.activeIndex];
                         sendImageToLine(currentPhoto);
@@ -616,20 +629,33 @@
                 }
             }
 
+            /**
+             * 關閉全螢幕模式
+             * 恢復頁面滾動狀態，並釋放記憶體
+             */
             function closeFullscreen() {
                 $('.fullscreen-overlay').hide();
                 $('body').css('overflow', '');
-                
-                // 釋放 Swiper 實例
+
                 if (swiper) {
-                    swiper.destroy(true, true);
+                    swiper.destroy(true, true); // 銷毀 Swiper 實例並移除所有 DOM 元素
                     swiper = null;
                 }
-                
-                // 清空 Swiper 容器
+
+                // 清空 Swiper 的內容，釋放記憶體
                 $('.swiper-wrapper').empty();
+
+                // 恢復頁面滾動位置
+                $('body').removeClass('no-scroll');
+                window.scrollTo(0, scrollPosition);
             }
 
+            /**
+             * UI 相關功能
+             * - 載入動畫
+             * - 通知訊息
+             * - 照片分享
+             */
             function showLoadingAnimation() {
                 $('#loading').show();
             }
@@ -653,14 +679,14 @@
                         originalContentUrl: imageUrl,
                         previewImageUrl: imageUrl + '=s300-c'
                     }])
-                    .then(() => {
-                        showNotification('照片已傳送到聊天室');
-                        console.log('Image sent successfully');
-                    })
-                    .catch((error) => {
-                        console.error('Error sending image:', error);
-                        showNotification('傳送照片失敗');
-                    });
+                        .then(() => {
+                            showNotification('照片已傳送到聊天室');
+                            console.log('Image sent successfully');
+                        })
+                        .catch((error) => {
+                            console.error('Error sending image:', error);
+                            showNotification('傳送照片失敗');
+                        });
                 }
             }
 
@@ -671,17 +697,17 @@
                         originalContentUrl: imageUrl,
                         previewImageUrl: imageUrl + '=s300-c'
                     }])
-                    .then((result) => {
-                        if (result) {
-                            showNotification('照片已成功分享');
-                        } else {
-                            showNotification('分享已取消');
-                        }
-                    })
-                    .catch((error) => {
-                        console.error('Error sharing image:', error);
-                        showNotification('分享照片失敗: ' + error.message);
-                    });
+                        .then((result) => {
+                            if (result) {
+                                showNotification('照片已成功分享');
+                            } else {
+                                showNotification('分享已取消');
+                            }
+                        })
+                        .catch((error) => {
+                            console.error('Error sharing image:', error);
+                            showNotification('分享照片失敗: ' + error.message);
+                        });
                 } else {
                     if (navigator.share) {
                         navigator.share({
@@ -689,13 +715,13 @@
                             text: '查看這照片',
                             url: imageUrl
                         })
-                        .then(() => {
-                            showNotification('照片已成功分享');
-                        })
-                        .catch((error) => {
-                            console.error('Error sharing via Web Share API:', error);
-                            showNotification('分享照片失敗');
-                        });
+                            .then(() => {
+                                showNotification('照片已成功分享');
+                            })
+                            .catch((error) => {
+                                console.error('Error sharing via Web Share API:', error);
+                                showNotification('分享照片失敗');
+                            });
                     } else {
                         const tempInput = document.createElement('input');
                         document.body.appendChild(tempInput);
@@ -708,8 +734,16 @@
                 }
             }
 
+            /**
+             * 事件監聽器設定
+             * 1. 觸控事件 - 防止非預期的頁面縮放
+             * 2. 滾動事件 - 實現無限滾動
+             * 3. 視窗調整事件 - 處理響應式布局變化
+             * 4. 螢幕方向變更事件 - 處理手機旋轉
+             */
+
             // 禁止整個頁面的縮放，但允許大圖縮放
-            document.addEventListener('touchmove', function(e) {
+            document.addEventListener('touchmove', function (e) {
                 if (e.touches.length > 1 && !$('.fullscreen-overlay').is(':visible')) {
                     e.preventDefault();
                 }
@@ -731,31 +765,31 @@
             // 修改 resize 事件處理
             let resizeTimeout;
             let previousWidth = window.innerWidth;
-            
-            $(window).on('resize', function() {
+
+            $(window).on('resize', function () {
                 clearTimeout(resizeTimeout);
-                resizeTimeout = setTimeout(function() {
+                resizeTimeout = setTimeout(function () {
                     const currentWidth = window.innerWidth;
                     const breakpoint = 768;
-                    
-                    // 只在寬度變化超過 50px 且跨越斷點時才重新載入
-                    if (Math.abs(currentWidth - previousWidth) > 100 && 
+
+                    // 只在寬度變化超過 100px 且跨越斷點時才重新載入
+                    if (Math.abs(currentWidth - previousWidth) > 100 &&
                         ((previousWidth <= breakpoint && currentWidth > breakpoint) ||
-                         (previousWidth > breakpoint && currentWidth <= breakpoint))) {
+                            (previousWidth > breakpoint && currentWidth <= breakpoint))) {
                         $('#albums-container').empty();
                         currentPage = 1;
                         loadAlbums();
                     }
-                    
+
                     previousWidth = currentWidth;
                 }, 500); // 增加延遲時間到 500ms
             });
 
             // 修改 orientationchange 事件處理
             let orientationTimeout;
-            window.addEventListener('orientationchange', function() {
+            window.addEventListener('orientationchange', function () {
                 clearTimeout(orientationTimeout);
-                orientationTimeout = setTimeout(function() {
+                orientationTimeout = setTimeout(function () {
                     // 只在實際方向改變時重新載入
                     const currentWidth = window.innerWidth;
                     if (Math.abs(currentWidth - previousWidth) > 200) {
