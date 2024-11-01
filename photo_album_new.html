@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>文藻美語 活動剪影</title>
+    <title>🍁活動剪影🍁</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Swiper/8.4.5/swiper-bundle.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Swiper/8.4.5/swiper-bundle.min.css">
@@ -479,15 +479,15 @@
                         const img = entry.target;
                         if (entry.isIntersecting) {
                             // 圖片進入視窗，載入圖片
-                            if (!img.src) {
+                            if (!img.hasAttribute('src')) {
                                 img.src = img.dataset.src;
                                 img.onload = () => img.parentElement.classList.remove('loading');
                             }
                         } else {
                             // 圖片離開視窗，卸載圖片
-                            if (img.src) {
+                            if (img.hasAttribute('src')) {
                                 img.parentElement.classList.add('loading');
-                                img.src = '';
+                                img.removeAttribute('src');
                             }
                         }
                     });
@@ -772,7 +772,7 @@
                     const currentWidth = window.innerWidth;
                     const breakpoint = 768;
 
-                    // 只在寬度變化超過 100px 且跨越斷點時才重新載入
+                    // 只在寬度變化超過 50px 且跨越斷點時才重新載入
                     if (Math.abs(currentWidth - previousWidth) > 100 &&
                         ((previousWidth <= breakpoint && currentWidth > breakpoint) ||
                             (previousWidth > breakpoint && currentWidth <= breakpoint))) {
